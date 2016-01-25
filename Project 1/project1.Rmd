@@ -1,0 +1,347 @@
+---
+title: "Project 1"
+author: "Benjamin Hendrick"
+date: "January 25, 2016"
+output: 
+  html_document:
+    css: min.css
+---
+
+# Problem 1
+
+*Classification* is the process which finds a model to categorize data into unique groups. *Regression* models the data into a continuous function between two or more variables. The main difference between classification and regression is how the data are treated. In classification, the data are treated as categorical. In regression, the data are treated as continuous. Both methods use the data to create a model, but the models are different in nature. 
+
+# Problem 2
+
+Load the data.
+
+```{r}
+adultdata <- read.csv("~/Desktop/adultdata.txt")
+```
+
+## 2.a
+
+Data descriptions (as reported for the 1990 census):
+
+- `age` is the age of an individual; integer.
+- `workclass` is the work class of an individual; string (Private, Self-emp-not-inc, Self-emp-inc, Federal-gov, Local-gov, State-gov, Without-pay, Never-worked.)
+- `fnlwgt` is unknwon as there is not enough information to describe the variable; integer.
+- `education` is the completed education of an individual; string (Bachelors, Some-college, 11th, HS-grad, Prof-school, Assoc-acdm, Assoc-voc, 9th, 7th-8th, 12th, Masters, 1st-4th, 10th, Doctorate, 5th-6th, Preschool.)
+- `education.num` is the cooresponding number to the completed education of an individual; integer.
+- `marital.status` is the marital status of an individual; string (Married-civ-spouse, Divorced, Never-married, Separated, Widowed, Married-spouse-absent, Married-AF-spouse.)
+- `occupation` is the occupation of an individual; string (Tech-support, Craft-repair, Other-service, Sales, Exec-managerial, Prof-specialty, Handlers-cleaners, Machine-op-inspct, Adm-clerical, Farming-fishing, Transport-moving, Priv-house-serv, Protective-serv, Armed-Forces.)
+- `relationship` is the relationship of the individual to a specific household; string (Wife, Own-child, Husband, Not-in-family, Other-relative, Unmarried.)
+- `race` is the race of an individual; string (White, Asian-Pac-Islander, Amer-Indian-Eskimo, Other, Black.)
+- `sex` is the sex of an individual; string (Female, Male.)
+- `capital.gain` is the capital gain of an individual; integer.
+- `capital.loss` is the capital loss of an individual; integer.
+- `hours.per.week` is the number of hours worked per week by an individual; integer.
+- `native.country` is the native country of an individual; string (United-States, Cambodia, England, Puerto-Rico, Canada, Germany, Outlying-US(Guam-USVI-etc), India, Japan, Greece, South, China, Cuba, Iran, Honduras, Philippines, Italy, Poland, Jamaica, Vietnam, Mexico, Portugal, Ireland, France, Dominican-Republic, Laos, Ecuador, Taiwan, Haiti, Columbia, Hungary, Guatemala, Nicaragua, Scotland, Thailand, Yugoslavia, El-Salvador, Trinadad&Tobago, Peru, Hong, Holand-Netherlands.)
+- `income` is the income class of an individual; string (<=50K, >50K.)
+
+## 2.b
+
+```{r}
+adultdata[adultdata == " ?"] <- NA
+apply(is.na(adultdata),2,sum)/nrow(adultdata)*100
+```
+
+From the code above...
+
+1. `workclass` has 5.638647\% missing values
+2. `occupation` has 5.660146\% missing values.
+3. `native.country` has 1.790486\% missing values.
+4. All other variables have no missing values.
+
+The histogram below shows the distribution of missing values for each row in the data set.
+
+```{r}
+hist(apply(is.na(adultdata),1,sum),
+     xlab = "Number of Missing Values Per Row",
+     ylab = "Frequency",
+     main = "Number of Missing Values",
+     breaks = 3,
+     col = "blue")
+```
+
+## 2.c
+
+The following variables are numeric:
+
+- `age`
+- `fnlwgt`
+- `education.num`
+- `captial.gain`
+- `capital.loss`
+- `hours.per.week`
+
+The following variables are categorical:
+
+- `workclass`
+- `education`
+- `marital.status`
+- `occupation`
+- `relationship`
+- `race`
+- `sex`
+- `native.country`
+- `income`
+
+Split these variables into partitioned sets for future use.
+
+```{r}
+adultnumeric <- adultdata[,c(1,3,5,11,12,13)]
+adultcat <- adultdata[,-c(1,3,5,11,12,13)]
+```
+
+## 2.d
+
+Create a histogram for each numeric variable with `length(x)` bins if `length(x) < 100`, else with 100 bins.
+
+```{r}
+apply(adultnumeric, 2, function(x) ifelse(length(unique(x)) < 100,
+              hist(x, 
+                   breaks = length(unique(x)),
+                   main = "",
+                   xlab = ""),
+              hist(x, 
+                   breaks = 100,
+                   main = "",
+                   xlab = "")))
+```
+
+Create two side-by-side histograms for each numeric variables. One historgram (blue) is the oberservations where `income = "<=50K"`. The other (red) is the observations where `income = ">50K"`.
+
+```{r}
+lesser <- adultdata[which(adultdata$income == " <=50K"), ]
+greater <- adultdata[which(adultdata$income == " >50K"), ]
+
+for(i in c(1,3,5,11,12,13)){
+par(mfrow=c(1,2))
+hist(lesser[,i],
+     xlab = names(lesser)[i],
+     ylab = "Frequency",
+     main = "",
+     col = "blue")
+hist(greater[,i],
+     xlab = names(greater)[i],
+     ylab = "Frequency",
+     main = "",
+     col = "red")
+}
+```
+
+Create two side-by-side boxplots. The color coding is the same.
+
+```{r}
+for(i in c(1,3,5,11,12,13)){
+  par(mfrow=c(1,2))
+  boxplot(lesser[,i],
+       xlab = names(lesser)[i],
+       ylab = "Frequency",
+       main = "",
+       col = "blue")
+  boxplot(greater[,i],
+       xlab = names(greater)[i],
+       ylab = "Frequency",
+       main = "",
+       col = "red")
+}
+
+par(mfrow = c(1,1))
+```
+
+Based on the histograms and box plots, the data are similarly distributed regardless of income class. There appears to be a greater number of higher income individuals with higher education. Higher income individuals also have a higher chance of working more hours per week.
+
+# 2.c
+
+Create a bar plot for each variable representing the frequency of each unique value.
+
+```{r}
+for(i in c(2,4,6,7,8,9,10,14,15)){
+barplot(table(adultdata[,i]), 
+        las = 2, 
+        cex.names = 0.65,
+        main = "",
+        xlab = names(adultcat)[i],
+        col = "blue")
+}
+```
+
+Create two side-by-side bar charts for each categorical variables. One bar chart (blue) is the oberservations where `income = "<=50K"`. The other (red) is the observations where `income = ">50K"`.
+
+```{r}
+for(i in c(2,4,6,7,8,9,10,14,15)){
+  par(mfrow=c(1,2))
+  barplot(table(lesser[,i]), 
+          las = 2, 
+          cex.names = 0.65,
+          main = "",
+          xlab = names(lesser)[i],
+          col = "blue")
+  barplot(table(greater[,i]), 
+          las = 2, 
+          cex.names = 0.65,
+          main = "",
+          xlab = names(greater)[i],
+          col = "red")
+}
+
+par(mfrow = c(1,1))
+```
+
+One thing that the data shows is that more higher income individuals have a masters degree than lower income invididuals. Less higher income individuals are divorsed than lower  income individuals.
+
+# 2.f
+
+```{r}
+plot(y = adultdata$education.num, x = adultdata$age,
+     xlab = "Age",
+     ylab = "Education",
+     main = "Education vs. Age")
+
+cor(adultdata$education.num, adultdata$age)
+```
+
+There is almost no relationship between education and age. The correlation is near zero, implying the lack of relationship. The plot shows no intuitive pattern(s) either.
+
+```{r}
+plot(x = adultnumeric$capital.gain, y = adultnumeric$hours.per.week,
+     xlab = "Capital Gain",
+     ylab = "Hours Per Week",
+     main = "Capital Gain vs. Hours Per Week")
+
+cor(adultnumeric$capital.gain, adultnumeric$hours.per.week)
+```
+
+There is no relationship between capital gain and hours worked per week. The correlation value between these two variables is almost zero, implying no relationship between the two variables.
+
+# Problem 3
+
+## 3.a
+
+Load the data.
+
+```{r}
+nfl.passing.2014 <- read.csv("~/Google Drive/Academic/Spring 2016/CS 4821/nfl-passing-2014.csv")
+```
+
+```{r}
+summary(nfl.passing.2014$TD)
+names(sort(-table(nfl.passing.2014$TD)))[1] # mode
+```
+
+The mean of `TD` is 8.17, the median is 2.00, and the mode is 0.
+
+```{r}
+summary(nfl.passing.2014$Int)
+names(sort(-table(nfl.passing.2014$Int)))[1] # mode
+```
+
+The mean of `Int` is 4.5, the median is 2.00, and the mode is 0.
+
+```{r}
+quantile(nfl.passing.2014$Yds)
+```
+
+The lower and upper quantiles for `YDS` are 19.25 and 2653.25, respectively.
+
+```{R}
+quantile(nfl.passing.2014$Rate)
+```
+
+The lower and upper quantiles for `RATE` are 55.45 and 96.40, respectively.
+
+```{r}
+fivenum(nfl.passing.2014$Cmp.)
+```
+
+The five number summary of `CMP.` is above.
+
+```{r}
+fivenum(nfl.passing.2014$Yds)
+```
+
+The five number summary of `YDS` is above.
+
+Create a histogram of `YARDS` with 4, 8, and 12 bins respectively.
+
+```{r}
+hist(nfl.passing.2014$Yds,
+     xlab = "Passing Yards",
+     main = "Histogram of Passing Yards",
+     col = "blue",
+     breaks = 4)
+
+hist(nfl.passing.2014$Yds,
+     xlab = "Passing Yards",
+     main = "Histogram of Passing Yards",
+     col = "blue",
+     breaks = 8)
+
+hist(nfl.passing.2014$Yds,
+     xlab = "Passing Yards",
+     main = "Histogram of Passing Yards",
+     col = "blue",
+     breaks = 12)
+```
+
+*Something strange is happening with these plots. Despite setting each `break` value to 4, 8, and 12, respectively, they do not appear to be binning correctly.*
+
+Compare the distribution of the of the number of `YARDS` of each quarter back based on whether they threw less than 12 interceptions.
+
+```{r}
+lessthan12 <- nfl.passing.2014[which(nfl.passing.2014$Int < 12), ]
+hist(lessthan12$Yds,
+     xlab = "Passing Yards",
+     main = "Distribution of Passing Yards")
+```
+
+Draw a scatter plot of `TD` vs. `INT`.
+
+```{r}
+plot(x = nfl.passing.2014$TD,
+     y = nfl.passing.2014$Int,
+     xlab = "Passing Touchdowns",
+     ylab = "Passing Interceptions",
+     main = "Passing Touchdowns vs. Interceptions")
+```
+
+# 3.b
+
+Load the data.
+
+```{r}
+tennis <- read.csv("~/Google Drive/Academic/Spring 2016/CS 4821/2014w.csv")
+```
+
+List top 5 players who have played a minimum of 20 matches with the highest average number of games won in a match.
+
+# 3.c
+
+Load the data.
+
+```{r}
+wc.data.2014 <- read.csv("~/Google Drive/Academic/Spring 2016/CS 4821/wc-data-2014.csv")
+```
+
+```{r}
+groupStage <- wc.data.2014[1:48,]
+groupStage$home_dif <- groupStage$home_score - groupStage$away_score
+groupStage$away_dif <- groupStage$away_score - groupStage$home_score
+
+sort(tapply(groupStage$home_dif, groupStage$home, FUN=sum) + 
+       tapply(groupStage$away_dif, groupStage$away, FUN=sum),
+     decreasing = TRUE)
+```
+
+From the code above, Columbia and the Netherlands have the best differential.
+
+```{r}
+sort(tapply(groupStage$home_dif, groupStage$home_continent, FUN=sum) + 
+       tapply(groupStage$away_dif, groupStage$away_continent, FUN=sum),
+     decreasing = TRUE)
+```
+
+From the code above, South America has the best differential.
+

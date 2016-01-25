@@ -1,0 +1,281 @@
+@font-face {
+    font-family: "Ubuntu";
+    font-style: normal;
+    font-weight: 300;
+    src: local("Ubuntu Light"), local("Ubuntu-Light"), url("http://themes.googleusercontent.com/static/fonts/ubuntu/v4/WtcvfJHWXKxx4x0kuS1kobO3LdcAZYWl9Si6vvxL-qU.woff") format("woff");
+}
+@font-face {
+    font-family: "Ubuntu";
+    font-style: normal;
+    font-weight: 400;
+    src: local("Ubuntu"), url("http://themes.googleusercontent.com/static/fonts/ubuntu/v4/CGXpU_uR_FUfdeyCjAWgZ-vvDin1pK8aKteLpeZ5c0A.woff") format("woff");
+}
+@font-face {
+    font-family: "Ubuntu";
+    font-style: normal;
+    font-weight: 500;
+    src: local("Ubuntu Medium"), local("Ubuntu-Medium"), url("http://themes.googleusercontent.com/static/fonts/ubuntu/v4/gMhvhm-nVj1086DvGgmzB7O3LdcAZYWl9Si6vvxL-qU.woff") format("woff");
+}
+@font-face {
+    font-family: "Ubuntu";
+    font-style: normal;
+    font-weight: 700;
+    src: local("Ubuntu Bold"), local("Ubuntu-Bold"), url("http://themes.googleusercontent.com/static/fonts/ubuntu/v4/nsLtvfQoT-rVwGTHHnkeJrO3LdcAZYWl9Si6vvxL-qU.woff") format("woff");
+}
+@font-face {
+    font-family: "Ubuntu";
+    font-style: italic;
+    font-weight: 300;
+    src: local("Ubuntu Light Italic"), local("Ubuntu-LightItalic"), url("http://themes.googleusercontent.com/static/fonts/ubuntu/v4/DZ_YjBPqZ88vcZCcIXm6VqfTCPadK0KLfdEfFtGWCYw.woff") format("woff");
+}
+
+
+body, td {
+  background-color: #ffffff;
+  font-family: "Ubuntu","Myriad Pro","Myriad",sans-serif;
+  font-size: 16px;
+  line-height: 21px;
+   margin: 8px;
+   max-width: 1024px;
+   padding-left: 2rem;
+}
+
+tt, code, pre {
+   font-family: 'DejaVu Sans Mono', 'Droid Sans Mono', 'Lucida Console', Consolas, Monaco, monospace;
+   font-size: 15px;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+.h1,
+.h2,
+.h3,
+.h4,
+.h5,
+.h6 {
+  font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-weight: 300;
+  line-height: 1.1;
+  color: inherit;
+}
+
+h1 {
+  margin-top: 20px;
+  margin-bottom: 10px;
+  font-size:30px;
+  border-top: 4px solid #aaa;
+  padding-top:.5em;
+}
+
+h2 { 
+  margin-top: 15px;
+  margin-bottom: 8px;
+  font-size:26px; 
+  border-top: 3px solid #e0e0e0;
+  padding-top: 0.5em;
+}
+
+h3 { 
+  margin-top: 10px;
+  margin-bottom: 8px;
+  font-size:20px; 
+}
+
+h4 { 
+   font-size:16px; 
+}
+
+h5 { 
+   font-size:16px; 
+}
+
+h6 { 
+   font-size:16px; 
+}
+
+a:visited {
+   color: rgb(50%, 0%, 50%);
+}
+
+p {
+  font-family: "Ubuntu","Myriad Pro","Myriad",sans-serif;
+  margin: 0 0 10.5px;
+}
+
+pre {        
+   margin-top: 0;
+   max-width: 95%;
+   border: 1px solid #ccc;
+   white-space: pre-wrap;
+}
+
+pre code {
+   display: block; padding: 1em;
+}
+
+code.r, code.cpp {
+   background-color: #F8F8F8;
+}
+
+table{
+  border-collapse: collapse;
+  text-align:left;
+}
+caption{
+  text-transform:   uppercase;
+  font-size:      2em;
+  color:        #000000;
+  text-align:     left;
+  font-weight:    bolder;
+  border-bottom:    6px solid #000;
+}
+
+thead tr th{
+  color:        #336699;
+  text-transform:   uppercase;
+  text-align:     center; 
+  padding-top: 0.4em;
+  padding-right: 0.2em;
+  padding-left: 0.2em;
+  border-bottom:    3px solid #000;
+}
+
+tfoot th, tfoot td{
+  border-top:     3px solid #000;
+}
+tr td, tr th{
+  border-bottom:    1px solid #000;
+  padding:      0.6em 0.8em;
+  line-height:    1.5em;
+}
+
+
+tbody th a{
+  text-transform:uppercase;
+}
+
+tbody a, tbody a:link{
+  color:      #0099ff;
+  font-weight:  bold; 
+  text-decoration:none;
+}
+
+tbody a:visited{
+  color:      #000;
+}
+
+blockquote {
+   color:#666666;
+   margin:0;
+   padding-left: 1em;
+   border-left: 0.5em #EEE solid;
+}
+
+hr {
+   height: 0px;
+   border-bottom: none;
+   border-top-width: thin;
+   border-top-style: dotted;
+   border-top-color: #999999;
+}
+
+ol > li:before {
+    color: #423F37;
+    content: counter(ol, decimal) ".";
+    counter-increment: ol;
+    font-weight: 700;
+    margin-right: 0.333em;
+    position: absolute;
+    right: 100%;
+}
+
+ul > li:before {
+    background-color: #423F37;
+    border-radius: 14px 14px 14px 14px;
+    content: "";
+    height: 6px;
+    margin-right: 0.333em;
+    margin-top: 0.55em;
+    position: absolute;
+    right: 100%;
+    width: 6px;
+}
+
+ol, ul, dl {
+    margin-left: 2rem;
+    padding: 0;
+}
+ol {
+    counter-reset: ol;
+}
+li + li, dd + dt {
+    margin-top: 0.5em;
+}
+
+ul > li {
+    position: relative;
+}
+
+ol > li {
+    position: relative;
+}
+li {
+    list-style: none outside none;
+}
+
+
+@media print {
+   * { 
+      background: transparent !important; 
+      color: black !important; 
+      filter:none !important; 
+      -ms-filter: none !important; 
+   }
+
+   body { 
+      font-size:12pt; 
+      max-width:100%; 
+   }
+       
+   a, a:visited { 
+      text-decoration: underline; 
+   }
+
+   hr { 
+      visibility: hidden;
+      page-break-before: always;
+   }
+
+   pre, blockquote { 
+      padding-right: 1em; 
+      page-break-inside: avoid; 
+   }
+
+   tr, img { 
+      page-break-inside: avoid; 
+   }
+
+   img { 
+      max-width: 100% !important; 
+   }
+
+   @page :left { 
+      margin: 15mm 20mm 15mm 10mm; 
+   }
+     
+   @page :right { 
+      margin: 15mm 10mm 15mm 20mm; 
+   }
+
+   p, h2, h3 { 
+      orphans: 3; widows: 3; 
+   }
+
+   h2, h3 { 
+      page-break-after: avoid; 
+   }
+}
