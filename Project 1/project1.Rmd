@@ -317,6 +317,21 @@ tennis <- read.csv("~/Google Drive/Academic/Spring 2016/CS 4821/2014w.csv")
 
 List top 5 players who have played a minimum of 20 matches with the highest average number of games won in a match.
 
+```{r}
+twenty <- tennis[tennis$Winner %in% names(subset(table(tennis$Winner), table(tennis$Winner) >= 20)), ]
+twenty <- twenty[, c(10, 16,18,20)]
+twenty$avg <- rowMeans(twenty[,c(2,3,4)], na.rm = TRUE)
+head(twenty[order(-twenty$avg),])
+```
+
+From the code above, the top 5 players are:
+
+1. Plaskova Ka.
+2. Ivanovic A.
+3. Kerber A.
+4. Keys M.
+5. Peng S.
+
 # 3.c
 
 Load the data.

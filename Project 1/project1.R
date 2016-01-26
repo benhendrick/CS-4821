@@ -158,10 +158,11 @@ plot(x = nfl.passing.2014$TD,
 tennis <- read.csv("~/Google Drive/Academic/Spring 2016/CS 4821/2014w.csv")
 
 #3.b.i
-twenty <- tennis[]
 
-top5 <- tennis[tennis$Winner %in% names(head(sort(table(tennis$Winner), 
-                                                  decreasing = TRUE),n=5)), ]
+twenty <- tennis[tennis$Winner %in% names(subset(table(tennis$Winner), table(tennis$Winner) >= 20)), ]
+twenty <- twenty[, c(10, 16,18,20)]
+twenty$avg <- rowMeans(twenty[,c(2,3,4)], na.rm = TRUE)
+head(twenty[order(-twenty$avg),])
 
 #3.c
 wc.data.2014 <- read.csv("~/Google Drive/Academic/Spring 2016/CS 4821/wc-data-2014.csv")
