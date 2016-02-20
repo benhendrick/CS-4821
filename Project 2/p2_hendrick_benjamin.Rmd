@@ -2,7 +2,9 @@
 title: "Project 2"
 author: "Benjamin Hendrick"
 date: "February 14, 2016"
-output: html_document
+output: 
+  html_document:
+    fig_caption: true
 ---
 
 # Part A: Data Pre-processing and Model Evaluation
@@ -15,13 +17,13 @@ $$v_{i}' = \frac{v_{i}- min_{A}}{max_{A} - min_{A}}(newMax_{A} - newMin_{A}) + n
 The R function for this formula may be written as:
 
 ```{r}
-minMaxNorm <- function (x,l,u){
-  normalized <- (x-min(x))/(max(x)-min(x))*(u-l)+l
+minMaxNorm <- function (train,test,l,u){
+  normalized <- (test-min(train))/(max(train)-min(train))*(u-l)+l # Patro and Kumar
   return(normalized)
 }
 ```
 
-where `x` is the data being normalized, `l` is the new lower bound, and `u` is the new upper bound.
+where `test` is the data being normalized, `train` is the data minimized and maximized, `l` is the new lower bound, and `u` is the new upper bound. In some cases `train` and `test` may be the same data.
 
 The formula for *z-score normalization* from the text is: 
 
@@ -30,18 +32,19 @@ $$v_{i}' = \frac{v_{i} - \bar{A}}{\sigma_{A}}$$
 The R function for this formula may be written as:
 
 ```{r}
-zScoreNorm <- function (x,type){
+zScoreNorm <- function (train,test,type){
   if (type == 1) {
-    z <- (x-mean(x))/sd(x)
-    return(z)
+    z <- (test-mean(train))/sd(train)
   }
   if (type == 2) {
-    (x - mean(x)) / (length(x)^-1 * sum(abs(x-mean(x))))
+    z <- (test - mean(train)) / (length(test)^-1 * sum(abs(test-mean(train))))
   }
+  return(z)
 }
+
 ```
 
-where `x` is the data being normalized, and `type` is the type of z-score normalization being selection (1 uses standard deviation and 2 uses mean absolute deviation.)
+where `test` is the data being normalized,`train` is the data used to evalue `mean` and `sd`, and `type` is the type of z-score normalization being selection (1 uses standard deviation and 2 uses mean absolute deviation.)
 
 ## Problem 2
 Load the data from the text.
@@ -54,7 +57,7 @@ data <- c(200,300,400,600,1000)
 Normalize the data with min-max normalization with $min=0$ and $max=1$.
 
 ```{r}
-minMaxNorm(data,0,1)
+a <- minMaxNorm(data,data,0,1)
 ```
 
 ### Part B
@@ -62,7 +65,7 @@ minMaxNorm(data,0,1)
 Normalize the data with z-score normalization using standard deviation.
 
 ```{r}
-zScoreNorm(data,1)
+b <- zScoreNorm(data,data,1)
 ```
 
 ### Part C
@@ -70,20 +73,667 @@ zScoreNorm(data,1)
 Normalize the data with z-score normalization using mean absolute deviation instead of standard deviation.
 
 ```{r}
-zScoreNorm(data,2)
+c <- zScoreNorm(data,data,2)
 ```
 
 
 The normalized data, using all three methods in parts A, B, and C, may be summarized in the following table.
 
-| Orignal Data | Min-Max Normalization | Z-Score Normalization (s.d.) | Z-Score Normalization (m.a.d.) |
-|--------------|-----------------------|------------------------------|--------------------------------|
-| 200          | 0.000                 | -0.9486833                   | -1.2500000                     |
-| 300          | 0.125                 | -0.6324555                   | -0.8333333                     |
-| 400          | 0.250                 | -0.3162278                   | -0.4166667                     |
-| 600          | 0.500                 | 0.3162278                    | 0.4166667                      |
-| 1000         | 0.100                 | 1.5811388                    | 2.0833333                      |
+| Orignal Data | Min-Max Normalization  | Z-Score Normalization (s.d.) | Z-Score Normalization (m.a.d.) |
+|--------------|----------------------- |------------------------------|--------------------------------|
+| 200          | `r a[1]`                 | `r b[1]`                       | `r c[1]`                     |
+| 300          | `r a[2]`                 | `r b[2]`                       | `r c[2]`                     |
+| 400          | `r a[3]`                 | `r b[3]`                       | `r c[3]`                    |
+| 600          | `r a[4]`                 | `r b[4]`                       | `r c[4]`                      |
+| 1000         | `r a[5]`                 | `r b[5]`                       | `r c[5]`                      |
+
 
 ## Problem 3
 
+Load the data from the web:
 
+```{r}
+iris <- read.csv("/var/folders/6j/_n_8wtg912559sqd775wfctw0000gn/T//Rtmpmv0LxE/data1b074f253bfa", header=FALSE)
+data <- c(1.6, 2.8, 3.72,4.97)
+```
+
+### Part A
+Use the `minMaxNorm` function from Problem 1. Set `iris$V3` (pedal length) as the training data and `data` as the testing data. Set the lower and upper bounds to -1 and 1, repsectively.
+
+```{r}
+a <- minMaxNorm(iris$V3,data,-1,1)
+```
+
+### Part B
+Use the `zScoreNorm` function from Problem 1. Set `iris$V3` (pedal length) as the training data and `data` as the testing data. Set the function type to `1` to use standard deviation.
+
+```{r}
+b <- zScoreNorm(iris$V3,data,1)
+```
+
+### Part C
+Use the `zScoreNorm` function from Problem 1. Set `iris$V3` (pedal length) as the training data and `data` as the testing data. Set the function type to `2` to use mean absolute deviation.
+
+```{r}
+c <- zScoreNorm(iris$V3,data,2)
+```
+
+The normalized data, using all three methods in parts A, B, and C, may be summarized in the following table.
+
+| Orignal Data | Min-Max Normalization  | Z-Score Normalization (s.d.) | Z-Score Normalization (m.a.d.) |
+|--------------|----------------------- |------------------------------|--------------------------------|
+| 1.6          | `r a[1]`                 | `r b[1]`                       | `r c[1]`                     |
+| 2.8          | `r a[2]`                 | `r b[2]`                       | `r c[2]`                     |
+| 3.72          | `r a[3]`                 | `r b[3]`                       | `r c[3]`                    |
+| 4.97          | `r a[4]`                 | `r b[4]`                       | `r c[4]`                      |
+
+### Problem 4
+
+```{r}
+predictionEvaluate <- function(yPred, yTrue, thresh){
+  for (i in 1:length(yPred)) {
+    if (1-yPred[i] < thresh) {
+      yPred[i] <- 1
+    } else {
+      yPred[i] <- 0
+    }
+  }
+  
+  tp <- 0
+  for (i in 1:length(yTrue)) {
+    if (yTrue[i] == 1) {
+      if(yTrue[i] == yPred[i]){
+        tp <- tp + 1
+      }
+    }
+  }
+  
+  tn <- 0
+  for (i in 1:length(yTrue)) {
+    if (yTrue[i] == 0) {
+      if(yTrue[i] == yPred[i]){
+        tn <- tn + 1
+      }
+    }
+  }
+  
+  fp <- 0
+  for (i in 1:length(yTrue)) {
+    if (yTrue[i] == 1) {
+      if(yTrue[i] != yPred[i]){
+        fp <- fp + 1
+      }
+    }
+  }
+  
+  fn <- 0
+  for (i in 1:length(yTrue)) {
+    if (yTrue[i] == 0) {
+      if(yTrue[i] != yPred[i]){
+        fn <- fn + 1
+      }
+    }
+  }
+  
+  tpr <- tp/(tp+fp)
+  tnr <- tn/(fp+tn)
+  sens <- tp/(tp+tn)
+  spec <- tn/(fp+tn)
+  prec <- tp/(tp+fp)
+  rec <- tp/(tp+fn)
+  acc <- (tp+tn)/(tp+fp+fn+tn)
+  
+  results <- list()
+  results$tp <- tp
+  results$tn <- tn
+  results$fp <- fp
+  results$fn <- fn
+  results$tpr <- tpr
+  results$tnr <- tnr
+  results$sens <- sens
+  results$spec <- spec
+  results$prec <- prec
+  results$rec <- rec
+  results$acc <- acc
+  return (results)
+}
+```
+
+### Problem 5
+
+Load the $Y_{True}$ and $Y_{Pred}$ into `R`.
+
+```{r}
+yPred <- c(0.98,0.92,0.85,0.77,0.71,0.64,0.50,0.39,0.34,0.31)
+yTrue <- c(1,0,1,1,0,0,1,0,1,0)
+```
+
+Use the `predictionEvalute` function from Problem 4 to evaluate the data.
+
+```{r}
+yEval <- predictionEvaluate(yPred,yTrue,0.5)
+```
+
+The following table shows the results of the evalutation.
+
+Results | Value
+-------------------------| ----------
+Number of True Positives | `r yEval$tp`
+Number of True Negatives | `r yEval$tn`
+Number of False Positives | `r yEval$fp`
+Number of False Negatives | `r yEval$fn`
+True Positive Rate | `r yEval$fn`
+True Negative Rate | `r yEval$fn`
+Sensativity | `r yEval$sens`
+Specificity | `r yEval$spec`
+Precision | `r yEval$prec`
+Recall | `r yEval$rec`
+Accuracy | `r yEval$acc`
+
+### Problem 6
+
+Find the sensativity from the `predictionEvaluate` function accorss the threshold range ${0.1, \ldots, 1.0}$.
+
+```{r}
+sens.list <- c() 
+thresh.list <- c()
+for (i in 1:10) {
+  tmp <- predictionEvaluate(yPred, yTrue, 0.01*i)
+  sens.list[i] <- tmp$sens
+  thresh.list[i] <- 0.1*i
+}
+
+```
+
+Plot the ROC curve where `x` is threshold and `y` is sensativity.
+
+```{r fig.cap="*Figure: The ROC curve for the $Y$ data in Problem 5.*"}
+plot(thresh.list, sens.list,
+     xlab = "False Positive Rate",
+     ylab = "True Positive Rate",
+     main = "ROC Curve",
+     type = "b")
+lines(x=c(0.1,1), y=c(0,0.2),col="red",type="b")
+```
+
+### Problem 7
+Load the error arrays $M_{1}$ and $M_{2}$ into `R`.
+```{r}
+m1 <- c(30.5, 32.2, 20.7, 20.6, 31.0, 41.0, 27.7, 26.0, 21.5, 26.0)
+m2 <- c(22.4, 14.5, 22.4, 19.6, 20.7, 20.4, 22.1, 19.4, 16.2, 35.0)
+```
+
+Perform a two sided t-test to evalute the difference between the means of the errors with 99% confidence.
+```{r}
+t.test(m1, m2, alternative = "two.sided", mu = 0, conf.level = 0.99)
+```
+
+Because the p-value is greater than $\alpha = 0.01$, we reject that the differences between the mean. We can conclude that $\mu_{M_{1}} = \mu_{M_{2}}$ with 99% confidence.
+
+-----
+
+# Part B: Classification I
+
+## Problem 1
+Load the nodes and splits into `R` as arrays.
+
+```{r}
+N <- c(100,50,60)
+N11 <- c(62,8,0)
+N12 <- c(38,42,60)
+N21 <- c(65,20,0)
+N22 <- c(21,19,20)
+N23 <- c(14,11,40)
+```
+
+### Part A
+
+Compute the gini indexes for $N_{1,1}$ and $N_{1,2}$. These are represented in `R` as `gini.N11` and `gini.N12`, respectively.
+
+```{r}
+gini.N11 <- 1 - (N11[1]/(N11[1]+N[1]))^2 - (N11[2]/(N11[2]+N[2]))^2 - (N11[3]/(N11[3]+N[3]))^2  
+gini.N12 <- 1 - (N12[1]/(N[1]+N12[1]))^2 - (N12[2]/(N[2]+N12[2]))^2 - (N12[3]/(N[3]+N12[3]))^2  
+```
+
+The gini index for node $N_{1,1}$ is `r gini.N11`. The gini index for node $N_{1,2}$ is `r gini.N12`.
+
+### Part B
+
+I would select node $N_{1,2}$ because it has the smallest gini index.
+
+### Part C
+
+Compute the entropy for $N_{1,1}$ and $N_{1,2}$. These are represented in `R` as `ent.N11` and `ent.N12`, respectively.
+
+```{r}
+ent.N11 <- -sum(N11)/sum(N11,N) * log(sum(N11)/sum(N11,N),base = 2) - sum(N)/sum(N11,N) * log(sum(N)/sum(N11,N),base = 2) 
+
+ent.N12 <- -sum(N12)/sum(N12,N) * log(sum(N12)/sum(N12,N),base = 2) - sum(N)/sum(N12,N) * log(sum(N)/sum(N12,N),base = 2) 
+```
+
+The entropy for node $N_{1,1}$ is `r ent.N11`. The entropy for node $N_{1,2}$ is `r ent.N12`. 
+
+### Part D
+
+I would select node $N_{1,1}$ because it has the smallest entropy.
+
+## Problem 2
+
+### Part A
+Load the iris into `R` and remove the designated variables.
+
+```{r}
+spam <- read.csv("/var/folders/6j/_n_8wtg912559sqd775wfctw0000gn/T//Rtmpmv0LxE/data1b071254b98b")
+spam <- spam[,-c(1,2,6,19,20,11)]
+```
+
+### Part B 
+Use the `createDataPartition` function from the `caret` package to split the data into a 80% training data and 20% testing data.
+
+```{r}
+library(caret)
+set.seed(100)
+rows <- createDataPartition(spam$name, p = 0.8, list = FALSE)
+spamTrain <- spam[rows,]
+spamTest <- spam[-rows,]
+```
+
+### Part C
+
+Use the `rpart` function in the `rpart` library to fit the data into a classification tree. The fitted model is called `spam.fit`.
+
+```{r}
+library(rpart)
+spam.fit <- rpart(spam~., 
+                  data = spamTrain, 
+                  method = "class")
+```
+
+### Part D
+
+Use the `plot` function to plot the classification tree `spam.fit`. 
+
+```{r}
+plot(spam.fit, uniform=TRUE, 
+     main="Classification Tree for Spam")
+text(spam.fit,cex=0.75)
+```
+There are 10 terminal leaves. There are 19 nodes.
+
+Print the tree as well.
+```{r}
+print(spam.fit)
+```
+
+
+### Part E
+
+We can find the accuracy and error from the confusion matri using the `confusionMatrix` function from the `caret` package. The AUC can be found using the `auc` function in `AUC` package. 
+
+```{r}
+library(AUC)
+
+spam.fit.Train <- predict(spam.fit,spamTrain,"class")
+spam.fit.Test <- predict(spam.fit,spamTest,"class")
+
+train.cm <- confusionMatrix(data=spam.fit.Train,
+                            reference=spamTrain$spam,
+                            positive=c("yes"))
+test.cm <- confusionMatrix(data=spam.fit.Test,
+                           reference = spamTest$spam,
+                           positive=c("yes"))
+
+train.auc <- auc(sensitivity(spam.fit.Train, spamTrain$spam))
+test.auc <- auc(sensitivity(spam.fit.Test, spamTest$spam))
+```
+
+The training and testing accuracies, errors, and AUCs are shown in the following table. The confusion matrix uses a threshold of 0.5 by default.
+ 
+Set | Accuracy | Error | AUC
+----|----------|-------|----
+Training | `r train.cm$overall[1]` | `r 1-train.cm$overall[1]` | `r train.auc`
+Testing | `r test.cm$overall[1]` | `r 1-test.cm$overall[1]` | `r test.auc`
+
+### Part F
+
+The tree is pruned with the `prune` function in the `class` package. This is done with a `cp` value of 0.015 and 0.2. The same methods of finind accuracy, error, and AUC from Part E are used in the code below.
+
+```{r}
+spam.pfit <- prune(spam.fit, cp= 0.015)
+
+spam.pfit.Train <- predict(spam.pfit,spamTrain,"class")
+spam.pfit.Test <- predict(spam.pfit,spamTest,"class")
+
+ptrain.cm <- confusionMatrix(data=spam.pfit.Train,
+                            reference=spamTrain$spam,
+                            positive=c("yes"))
+ptest.cm <- confusionMatrix(data=spam.pfit.Test,
+                           reference = spamTest$spam,
+                           positive=c("yes"))
+
+ptrain.auc <- auc(sensitivity(spam.pfit.Train, spamTrain$spam))
+ptest.auc <- auc(sensitivity(spam.pfit.Test, spamTest$spam))
+
+spam.pfit2 <- prune(spam.fit, cp= 0.2)
+
+spam.pfit.Train2 <- predict(spam.pfit2,spamTrain,"class")
+spam.pfit.Test2 <- predict(spam.pfit2,spamTest,"class")
+
+ptrain.cm2 <- confusionMatrix(data=spam.pfit.Train2,
+                             reference=spamTrain$spam,
+                             positive=c("yes"))
+ptest.cm2 <- confusionMatrix(data=spam.pfit.Test2,
+                            reference = spamTest$spam,
+                            positive=c("yes"))
+
+ptrain.auc2 <- auc(sensitivity(spam.pfit.Train2, spamTrain$spam))
+ptest.auc2 <- auc(sensitivity(spam.pfit.Test2, spamTest$spam))
+```
+
+The training and testing accuracies, errors, and AUCs with different prune `cp` values are shown in the following table. The confusion matrix uses a threshold of 0.5 by default.
+
+`cp` | Set | Accuracy | Error | AUC
+-----|----|----------|-------|----
+0.015 | Training | `r ptrain.cm$overall[1]` | `r 1-ptrain.cm$overall[1]` | `r ptrain.auc`
+0.015 | Testing | `r ptest.cm$overall[1]` | `r 1-ptest.cm$overall[1]` | `r ptest.auc`
+0.2 | Training | `r ptrain.cm2$overall[1]` | `r 1-ptrain.cm2$overall[1]` | `r ptrain.auc2`
+0.2 | Testing | `r ptest.cm2$overall[1]` | `r 1-ptest.cm2$overall[1]` | `r ptest.auc2`
+
+## Problem 3
+
+### Part A
+
+Load the data into `R` and remove the specified columns.
+
+```{r}
+music <- read.csv("/var/folders/6j/_n_8wtg912559sqd775wfctw0000gn/T//Rtmpmv0LxE/data1b076228f72f")
+music <- music[,-c(2,3,4,5)]
+```
+
+### Part B
+
+Partition the data using the `createDataPartition` function from the `caret` package. 10-fold cross validation is done using the `time=10` attribute in the function. The data is split 80% to training and 20% to testing.
+
+```{r}
+library(caret)
+set.seed(100)
+musicSplit <- createDataPartition(music$Top10, p = 0.8, list = TRUE, time=10)
+```
+
+We can check the distribution of each strification by saving the percentages of ones and zero from each strification into two array. This is done for the testing and training set.
+
+```{r}
+trainDistZero <- c()
+trainDistOne <- c()
+
+for (i in 1:10) {
+  musicTrain <- music[musicSplit[[i]],]
+  trainDistZero[i] <- prop.table(table(musicTrain$Top10))[1]
+  trainDistOne[i] <- prop.table(table(musicTrain$Top10))[2]
+}
+
+testDistZero <- c()
+testDistOne <- c()
+
+for (i in 1:10) {
+  musicTest <- music[-musicSplit[[i]],]
+  testDistZero[i] <- prop.table(table(musicTest$Top10))[1]
+  testDistOne[i] <- prop.table(table(musicTest$Top10))[2]
+}
+```
+
+The distribution of 10 training data splits are in the following table.
+
+Split Number | Number of Zeros | Number of Ones 
+-------------|-----------------|----------------
+1            | `r trainDistZero[1]` | `r trainDistOne[1]`
+2            | `r trainDistZero[2]` | `r trainDistOne[2]`
+3            | `r trainDistZero[3]` | `r trainDistOne[3]`
+4            | `r trainDistZero[4]` | `r trainDistOne[4]`
+5            | `r trainDistZero[5]` | `r trainDistOne[5]`
+6            | `r trainDistZero[6]` | `r trainDistOne[6]`
+7            | `r trainDistZero[7]` | `r trainDistOne[7]`
+8            | `r trainDistZero[8]` | `r trainDistOne[8]`
+9            | `r trainDistZero[9]` | `r trainDistOne[9]`
+10            | `r trainDistZero[10]` | `r trainDistOne[10]`
+
+The distributions in the tables above are essentially the same by a rounding error.
+
+The distribution of 10 testing data splits are in the following table.
+
+Split Number | Number of Zeros | Number of Ones 
+-------------|-----------------|----------------
+1            | `r testDistZero[1]` | `r testDistOne[1]`
+2            | `r testDistZero[2]` | `r testDistOne[2]`
+3            | `r testDistZero[3]` | `r testDistOne[3]`
+4            | `r testDistZero[4]` | `r testDistOne[4]`
+5            | `r testDistZero[5]` | `r testDistOne[5]`
+6            | `r testDistZero[6]` | `r testDistOne[6]`
+7            | `r testDistZero[7]` | `r testDistOne[7]`
+8            | `r testDistZero[8]` | `r testDistOne[8]`
+9            | `r testDistZero[9]` | `r testDistOne[9]`
+10            | `r testDistZero[10]` | `r testDistOne[10]`
+
+The variation in distribution between each split is more evident in the testing data. This is probably because of the smaller split percentage (20%).
+
+### Part C
+The KNN model can be fitted using the `knn` function from the `class` package. The following loops find the accuracy, error, and AUC for each of the 10 data splits. The accuracy, error, and AUC are found the same way as in Problem 2. We do this for $k = 1,5,9$.
+
+```{r}
+library(class)
+library(ROCR)
+kValue = 1
+acc <- c()
+err <- c()
+auc <- c()
+for (i in 1:10){
+  musicTrain <- music[musicSplit[[i]],]
+  musicTest <- music[-musicSplit[[i]],]
+  
+  model <- knn(musicTrain[,1:34],
+               musicTest[,1:34],
+               cl=musicTrain[,35],
+               k=kValue)
+  
+  knn.cm <- confusionMatrix(data=model,
+                              reference = musicTest$Top10,
+                              positive=c("1"))
+  acc[i] <- knn.cm$overall[[1]]
+  err[i] <- 1 - knn.cm$overall[[1]]
+  
+  knn.pred <- prediction(as.numeric(model)-1, as.numeric(musicTest$Top10)-1)
+  knn.auc <- performance(knn.pred,"auc")
+  auc[i] <- knn.auc@y.values[[1]]
+}
+```
+
+The following table shows the accuracy, error, and AUC for each of KNN fits for the data splits where $k=1$
+
+ Split Number | Accuracy | Error | AUC
+--------------|----------|-------|-----
+1             | `r acc[1]` | `r err[1]` | `r auc[1]`
+2             | `r acc[2]` | `r err[2]` | `r auc[2]`
+3             | `r acc[3]` | `r err[3]` | `r auc[3]`
+4             | `r acc[4]` | `r err[4]` | `r auc[4]`
+5             | `r acc[5]` | `r err[5]` | `r auc[5]`
+6             | `r acc[6]` | `r err[6]` | `r auc[6]`
+7             | `r acc[7]` | `r err[7]` | `r auc[7]`
+8             | `r acc[8]` | `r err[8]` | `r auc[8]`
+9             | `r acc[9]` | `r err[9]` | `r auc[9]`
+10             | `r acc[10]` | `r err[10]` | `r auc[10]`
+
+
+```{r}
+library(class)
+library(ROCR)
+kValue = 5
+acc <- c()
+err <- c()
+auc <- c()
+for (i in 1:10){
+  musicTrain <- music[musicSplit[[i]],]
+  musicTest <- music[-musicSplit[[i]],]
+  
+  model <- knn(musicTrain[,1:34],
+               musicTest[,1:34],
+               cl=musicTrain[,35],
+               k=kValue)
+  
+  knn.cm <- confusionMatrix(data=model,
+                              reference = musicTest$Top10,
+                              positive=c("1"))
+  acc[i] <- knn.cm$overall[[1]]
+  err[i] <- 1 - knn.cm$overall[[1]]
+  
+  knn.pred <- prediction(as.numeric(model)-1, as.numeric(musicTest$Top10)-1)
+  knn.auc <- performance(knn.pred,"auc")
+  auc[i] <- knn.auc@y.values[[1]]
+}
+```
+
+The following table shows the accuracy, error, and AUC for each of KNN fits for the data splits where $k=5$
+
+ Split Number | Accuracy | Error | AUC
+--------------|----------|-------|-----
+1             | `r acc[1]` | `r err[1]` | `r auc[1]`
+2             | `r acc[2]` | `r err[2]` | `r auc[2]`
+3             | `r acc[3]` | `r err[3]` | `r auc[3]`
+4             | `r acc[4]` | `r err[4]` | `r auc[4]`
+5             | `r acc[5]` | `r err[5]` | `r auc[5]`
+6             | `r acc[6]` | `r err[6]` | `r auc[6]`
+7             | `r acc[7]` | `r err[7]` | `r auc[7]`
+8             | `r acc[8]` | `r err[8]` | `r auc[8]`
+9             | `r acc[9]` | `r err[9]` | `r auc[9]`
+10             | `r acc[10]` | `r err[10]` | `r auc[10]`
+
+```{r}
+library(class)
+library(ROCR)
+kValue = 9
+acc <- c()
+err <- c()
+auc <- c()
+for (i in 1:10){
+  musicTrain <- music[musicSplit[[i]],]
+  musicTest <- music[-musicSplit[[i]],]
+  
+  model <- knn(musicTrain[,1:34],
+               musicTest[,1:34],
+               cl=musicTrain[,35],
+               k=kValue)
+  
+  knn.cm <- confusionMatrix(data=model,
+                              reference = musicTest$Top10,
+                              positive=c("1"))
+  acc[i] <- knn.cm$overall[[1]]
+  err[i] <- 1 - knn.cm$overall[[1]]
+  
+  knn.pred <- prediction(as.numeric(model)-1, as.numeric(musicTest$Top10)-1)
+  knn.auc <- performance(knn.pred,"auc")
+  auc[i] <- knn.auc@y.values[[1]]
+}
+```
+
+The following table shows the accuracy, error, and AUC for each of KNN fits for the data splits where $k=9$
+
+ Split Number | Accuracy | Error | AUC
+--------------|----------|-------|-----
+1             | `r acc[1]` | `r err[1]` | `r auc[1]`
+2             | `r acc[2]` | `r err[2]` | `r auc[2]`
+3             | `r acc[3]` | `r err[3]` | `r auc[3]`
+4             | `r acc[4]` | `r err[4]` | `r auc[4]`
+5             | `r acc[5]` | `r err[5]` | `r auc[5]`
+6             | `r acc[6]` | `r err[6]` | `r auc[6]`
+7             | `r acc[7]` | `r err[7]` | `r auc[7]`
+8             | `r acc[8]` | `r err[8]` | `r auc[8]`
+9             | `r acc[9]` | `r err[9]` | `r auc[9]`
+10             | `r acc[10]` | `r err[10]` | `r auc[10]`
+
+### Part D
+
+The decision tree is created in the same way as in Problem 2. The accuracy, error, and AUC are found in the same way as the previous part.
+
+```{r}
+acc <- c()
+err <- c()
+auc <- c()
+for (i in 1:10){
+  musicTrain <- music[musicSplit[[i]],]
+  musicTest <- music[-musicSplit[[i]],]
+  
+  model <- rpart(Top10 ~ ., 
+                 data = musicTrain, 
+                 method = "class")
+  model.fit <- predict(model,musicTest,"class")
+  tree.cm <- confusionMatrix(data=model.fit,
+                            reference = musicTest$Top10,
+                            positive=c("1"))
+  acc[i] <- tree.cm$overall[[1]]
+  err[i] <- 1 - tree.cm$overall[[1]]
+  
+  tree.pred <- prediction(as.numeric(model.fit)-1, as.numeric(musicTest$Top10)-1)
+  tree.auc <- performance(tree.pred,"auc")
+  auc[i] <- tree.auc@y.values[[1]]
+}
+```
+
+The following table shows the accuracy, error, and AUC for each of decision tree models fits for the 10 partition splits.
+
+ Split Number | Accuracy | Error | AUC
+--------------|----------|-------|-----
+1             | `r acc[1]` | `r err[1]` | `r auc[1]`
+2             | `r acc[2]` | `r err[2]` | `r auc[2]`
+3             | `r acc[3]` | `r err[3]` | `r auc[3]`
+4             | `r acc[4]` | `r err[4]` | `r auc[4]`
+5             | `r acc[5]` | `r err[5]` | `r auc[5]`
+6             | `r acc[6]` | `r err[6]` | `r auc[6]`
+7             | `r acc[7]` | `r err[7]` | `r auc[7]`
+8             | `r acc[8]` | `r err[8]` | `r auc[8]`
+9             | `r acc[9]` | `r err[9]` | `r auc[9]`
+10             | `r acc[10]` | `r err[10]` | `r auc[10]`
+
+The tree is pruned using `cp = 0.2` as a attribute to the `prune` function.
+
+```{r}
+acc <- c()
+err <- c()
+auc <- c()
+for (i in 1:10){
+  musicTrain <- music[musicSplit[[i]],]
+  musicTest <- music[-musicSplit[[i]],]
+  
+  model <- rpart(Top10 ~ ., 
+                 data = musicTrain, 
+                 method = "class")
+  model.prune <- prune(model, cp= 0.2)
+  model.fit <- predict(model.prune,musicTest,"class")
+  tree.cm <- confusionMatrix(data=model.fit,
+                             reference = musicTest$Top10,
+                             positive=c("1"))
+  acc[i] <- tree.cm$overall[[1]]
+  err[i] <- 1 - tree.cm$overall[[1]]
+  
+  tree.pred <- prediction(as.numeric(model.fit)-1, as.numeric(musicTest$Top10)-1)
+  tree.auc <- performance(tree.pred,"auc")
+  auc[i] <- tree.auc@y.values[[1]]
+}
+```
+
+The following table shows the accuracy, error, and AUC for each of pruned decision tree models fits for the 10 partition splits.
+
+ Split Number | Accuracy | Error | AUC
+--------------|----------|-------|-----
+1             | `r acc[1]` | `r err[1]` | `r auc[1]`
+2             | `r acc[2]` | `r err[2]` | `r auc[2]`
+3             | `r acc[3]` | `r err[3]` | `r auc[3]`
+4             | `r acc[4]` | `r err[4]` | `r auc[4]`
+5             | `r acc[5]` | `r err[5]` | `r auc[5]`
+6             | `r acc[6]` | `r err[6]` | `r auc[6]`
+7             | `r acc[7]` | `r err[7]` | `r auc[7]`
+8             | `r acc[8]` | `r err[8]` | `r auc[8]`
+9             | `r acc[9]` | `r err[9]` | `r auc[9]`
+10             | `r acc[10]` | `r err[10]` | `r auc[10]`
+
+### Part E
+
+The inclusion of negative samples would influence the results. The all positive data would would force a positive prediction. Therefore, the predictions may be skewed to a different side (one vs. zero) depending how the prediction formula works.

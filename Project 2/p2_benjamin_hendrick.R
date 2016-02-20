@@ -33,15 +33,13 @@ zScoreNorm(data,data,2)
 # Problem 3
 iris <- read.csv("/var/folders/6j/_n_8wtg912559sqd775wfctw0000gn/T//Rtmpmv0LxE/data1b074f253bfa", header=FALSE)
 data <- c(1.6, 2.8, 3.72,4.97)
-minMaxNorm(iris$V3,data,-1,1)
-zScoreNorm(iris$V3,data,1)
-zScoreNorm(iris$V3,data,2)
 
 ## Part A
-minMaxNorm(iris[,3],-1,1)[rows]
+minMaxNorm(iris$V3,data,-1,1)
 
 ## Part B
-zScoreNorm(iris[,3],1)[rows]
+zScoreNorm(iris$V3,data,1)
+zScoreNorm(iris$V3,data,2)
 
 # Problem 4
 predictionEvaluate <- function(yPred, yTrue, thresh){
@@ -52,7 +50,7 @@ predictionEvaluate <- function(yPred, yTrue, thresh){
       yPred[i] <- 0
     }
   }
-
+  
   tp <- 0
   for (i in 1:length(yTrue)) {
     if (yTrue[i] == 1) {
@@ -130,7 +128,7 @@ plot(thresh.list, sens.list,
      xlab = "False Positive Rate",
      ylab = "True Positive Rate",
      main = "ROC Curve",
-     type = "o")
+     type = "b")
 
 # Problem 7
 m1 <- c(30.5, 32.2, 20.7, 20.6, 31.0, 41.0, 27.7, 26.0, 21.5, 26.0)
@@ -180,35 +178,194 @@ spamTest <- spam[-rows,]
 
 ## Part C
 library(rpart)
-spam.fit <- rpart(spam~day.of.week+time.of.day+size.kb+domain+local+digits+name+special+credit+sucker+porn+chain+username+large.text, 
+spam.fit <- rpart(spam~., 
                   data = spamTrain, 
                   method = "class")
-plot(spam.fit, uniform=TRUE, 
-     main="Classification Tree for Spam")
-text(spam.fit, use.n=TRUE, all=TRUE, cex=.8)
 
 ## Part D
+install.packages("AUC")
+library(AUC)
+plot(spam.fit, uniform=TRUE, 
+     main="Classification Tree for Spam")
+text(spam.fit,cex=0.75)
+print(spam.fit)
 
 ## Part E
-printcp(spam.fit)
-performance(spam.fit)
+spam.fit.Train <- predict(spam.fit,spamTrain,"class")
+spam.fit.Test <- predict(spam.fit,spamTest,"class")
+
+train.cm <- confusionMatrix(data=spam.fit.Train,
+                            reference=spamTrain$spam,
+                            positive=c("yes"))
+test.cm <- confusionMatrix(data=spam.fit.Test,
+                           reference = spamTest$spam,
+                           positive=c("yes"))
+
+train.auc <- auc(sensitivity(spam.fit.Train, spamTrain$spam))
+test.auc <- auc(sensitivity(spam.fit.Test, spamTest$spam))
 
 ## Part F
-spam.pfit <- prune(spam.fit, cp= 0.1)
+spam.pfit <- prune(spam.fit, cp= 0.015)
 
-plot(spam.pfit, uniform=TRUE, 
-     main="Pruned Classification Tree for Kyphosis")
-text(spam.pfit, use.n=TRUE, all=TRUE, cex=.8)
+spam.pfit.Train <- predict(spam.pfit,spamTrain,"class")
+spam.pfit.Test <- predict(spam.pfit,spamTest,"class")
 
-## Problem 3
-music <- read.csv("/var/folders/6j/_n_8wtg912559sqd775wfctw0000gn/T//Rtmpmv0LxE/data1b076228f72f")
-music <- music[,-c(3,4,5)]
+ptrain.cm <- confusionMatrix(data=spam.pfit.Train,
+                             reference=spamTrain$spam,
+                             positive=c("yes"))
+ptest.cm <- confusionMatrix(data=spam.pfit.Test,
+                            reference = spamTest$spam,
+                            positive=c("yes"))
 
+ptrain.auc <- auc(sensitivity(spam.pfit.Train, spamTrain$spam))
+ptest.auc <- auc(sensitivity(spam.pfit.Test, spamTest$spam))
+
+spam.pfit2 <- prune(spam.fit, cp= 0.2)
+
+spam.pfit.Train2 <- predict(spam.pfit2,spamTrain,"class")
+spam.pfit.Test2 <- predict(spam.pfit2,spamTest,"class")
+
+ptrain.cm2 <- confusionMatrix(data=spam.pfit.Train2,
+                              reference=spamTrain$spam,
+                              positive=c("yes"))
+ptest.cm2 <- confusionMatrix(data=spam.pfit.Test2,
+                             reference = spamTest$spam,
+                             positive=c("yes"))
+
+ptrain.auc2 <- auc(sensitivity(spam.pfit.Train2, spamTrain$spam))
+ptest.auc2 <- auc(sensitivity(spam.pfit.Test2, spamTest$spam))
+
+
+# Problem 3
 ## Part A
-library(caret)
-set.seed(100)
-music.rows <- createDataPartition(music$year, p = 0.8, list = FALSE)
-music.train <- spam[music.rows,]
-music.test <- spam[-music.rows,]
+music <- read.csv("/var/folders/6j/_n_8wtg912559sqd775wfctw0000gn/T//Rtmpmv0LxE/data1b076228f72f")
+music <- music[,-c(2,3,4,5)]
 
 ## Part B
+library(caret)
+set.seed(100)
+musicSplit <- createDataPartition(music$Top10, p = 0.8, list = TRUE, time=10)
+
+trainDistZero <- c()
+trainDistOne <- c()
+
+for (i in 1:10) {
+  musicTrain <- music[musicSplit[[i]],]
+  trainDistZero[i] <- prop.table(table(musicTrain$Top10))[1]
+  trainDistOne[i] <- prop.table(table(musicTrain$Top10))[2]
+}
+
+testDistZero <- c()
+testDistOne <- c()
+
+for (i in 1:10) {
+  musicTest <- music[-musicSplit[[i]],]
+  testDistZero[i] <- prop.table(table(musicTest$Top10))[1]
+  testDistOne[i] <- prop.table(table(musicTest$Top10))[2]
+}
+
+
+## Part C
+require(class)
+kValue = 1
+for (i in 1:10){
+  musicTrain <- music[musicSplit[[i]],]
+  musicTest <- music[-musicSplit[[i]],]
+  
+  model <- knn(musicTrain[,1:34],
+               musicTest[,1:34],
+               cl=musicTrain[,35],
+               k=kValue)
+  
+  knn.cm <- confusionMatrix(data=model,
+                            reference = musicTest$Top10,
+                            positive=c("1"))
+  print(knn.cm$overall[[1]])
+  print(1 - knn.cm$overall[[1]])
+  
+  knn.pred <- prediction(as.numeric(model)-1, as.numeric(musicTest$Top10)-1)
+  knn.auc <- performance(knn.pred,"auc")
+  print(knn.auc@y.values[[1]])
+}
+
+kValue = 5
+for (i in 1:10){
+  musicTrain <- music[musicSplit[[i]],]
+  musicTest <- music[-musicSplit[[i]],]
+  
+  model <- knn(musicTrain[,1:34],
+               musicTest[,1:34],
+               cl=musicTrain[,35],
+               k=kValue)
+  
+  knn.cm <- confusionMatrix(data=model,
+                            reference = musicTest$Top10,
+                            positive=c("1"))
+  print(knn.cm$overall[[1]])
+  print(1 - knn.cm$overall[[1]])
+  
+  knn.pred <- prediction(as.numeric(model)-1, as.numeric(musicTest$Top10)-1)
+  knn.auc <- performance(knn.pred,"auc")
+  print(knn.auc@y.values[[1]])
+}
+
+kValue = 9
+for (i in 1:10){
+  musicTrain <- music[musicSplit[[i]],]
+  musicTest <- music[-musicSplit[[i]],]
+  
+  model <- knn(musicTrain[,1:34],
+               musicTest[,1:34],
+               cl=musicTrain[,35],
+               k=kValue)
+  
+  knn.cm <- confusionMatrix(data=model,
+                            reference = musicTest$Top10,
+                            positive=c("1"))
+  print(knn.cm$overall[[1]])
+  print(1 - knn.cm$overall[[1]])
+  
+  knn.pred <- prediction(as.numeric(model)-1, as.numeric(musicTest$Top10)-1)
+  knn.auc <- performance(knn.pred,"auc")
+  print(knn.auc@y.values[[1]])
+}
+
+## Part D
+for (i in 1:10){
+  musicTrain <- music[musicSplit[[i]],]
+  musicTest <- music[-musicSplit[[i]],]
+  
+  model <- rpart(Top10 ~ ., 
+                 data = musicTrain, 
+                 method = "class")
+  model.fit <- predict(model,musicTest,"class")
+  tree.cm <- confusionMatrix(data=model.fit,
+                             reference = musicTest$Top10,
+                             positive=c("1"))
+  print(tree.cm$overall[[1]])
+  print(1 - tree.cm$overall[[1]])
+  
+  tree.pred <- prediction(as.numeric(model.fit)-1, as.numeric(musicTest$Top10)-1)
+  tree.auc <- performance(tree.pred,"auc")
+  print(tree.auc@y.values[[1]])
+}
+
+for (i in 1:10){
+  musicTrain <- music[musicSplit[[i]],]
+  musicTest <- music[-musicSplit[[i]],]
+  
+  model <- rpart(Top10 ~ ., 
+                 data = musicTrain, 
+                 method = "class")
+  model.prune <- prune(model, cp= 0.2)
+  model.fit <- predict(model.prune,musicTest,"class")
+  tree.cm <- confusionMatrix(data=model.fit,
+                             reference = musicTest$Top10,
+                             positive=c("1"))
+  print(tree.cm$overall[[1]])
+  print(1 - tree.cm$overall[[1]])
+  
+  tree.pred <- prediction(as.numeric(model.fit)-1, as.numeric(musicTest$Top10)-1)
+  tree.auc <- performance(tree.pred,"auc")
+  print(tree.auc@y.values[[1]])
+}
