@@ -116,19 +116,68 @@ svm.acc <- c()
 svm.err <- c()
 svm.auc <- c()
 for (i in svm.cost){
+  library(kernlab)
   svm.fit <- ksvm(spam~., 
                   data = spam.train,
                   kernel ="rbfdot", 
                   kpar = "automatic",
-                  C = 1, epsilon = 0.1)
+                  C = i, epsilon = 0.1)
   svm.fit.test <- predict(svm.fit,spam.test[,-15])
+  library(caret)
   svm.test.cm <- confusionMatrix(data=svm.fit.test,
                                  reference = spam.test$spam,
                                  positive=c("yes"))
   svm.acc <- c(svm.acc,svm.test.cm$overall[1])
   svm.err <- c(svm.err,(1-svm.test.cm$overall[1]))
+  library(AUC)
   svm.test.auc <- auc(sensitivity(svm.fit.test, spam.test$spam))
   svm.auc <- c(svm.auc, svm.test.auc)
 }
 
+svm.summary <- data.frame(svm.cost,svm.acc,svm.err,svm.auc)
+svm.cost.best <- svm.summary[which(svm.summary$svm.auc==max(svm.summary$svm.auc)),"svm.cost"]
+
+library(kernlab)
+svm.fit <- ksvm(spam~., 
+                data = spam.train,
+                kernel ="rbfdot", 
+                kpar = "automatic",
+                C = svm.cost.best, epsilon = 0.1)
+svm.fit.test <- predict(svm.fit,spam.test[,-15])
+
 ## Part G
+spam.ens <- data.frame(spam.test$spam, spam.pred, tree.fit.test, rf.fit.test, svm.fit.test)
+spam.ens.pred <- c()
+k <- 0
+for (i in 1:length(spam.ens$spam.pred)) {
+  for(j in 2:5) {
+    if (spam.ens[i,j] == 'yes') {
+      k = k + 1
+    }
+  }
+  
+  if (k >= 3) {
+    spam.ens.pred <- c(spam.ens.pred, "yes")
+  } else{
+    spam.ens.pred <- c(spam.ens.pred, "no")
+  }
+  
+  k <- 0
+}
+
+spam.ens.cm <- confusionMatrix(data=spam.ens.pred,
+                                reference = spam.test$spam,
+                                positive=c("yes"))
+spam.ens.auc <- auc(sensitivity(spam.ens.pred, spam.test$spam))
+
+## Part H
+install.packages("adabag")
+library(adabag)
+bag.fit <- bagging(spam~., data = spam.train, mfinal = 100, method = "class")
+bag.fit.test <- predict.bagging(bag.fit,spam.test)
+bag.fit.test$error
+
+## Part I
+boost.fit <- boosting(spam~., data = spam.train, mfinal = 100, method = "class")
+boost.fit.test <- predict.boosting(boost.fit,spam.test)
+boost.fit.test$error
