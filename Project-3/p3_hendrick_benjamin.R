@@ -7,8 +7,8 @@
 ## Part A
 
 # Load all files
-#dataDir <- '//homedir.mtu.edu/home/Desktop/plays/plays'
-dataDir <- '/Users/benhendrick/GitHub/CS 4821/Project-3/plays/'
+dataDir <- '//homedir.mtu.edu/home/Desktop/plays/plays'
+#dataDir <- '/Users/benhendrick/GitHub/CS 4821/Project-3/plays/'
 
 docs <- list()
 files <- dir(path = dataDir, full.names = TRUE)
@@ -31,8 +31,8 @@ for (i in 21:30) {
 ## Part B
 
 # Load stopwords.txt
-# filePath <- '//homedir.mtu.edu/home/Desktop/stopwords.txt'
-filePath <- '/Users/benhendrick/GitHub/CS 4821/Project-3/stopwords.txt'
+filePath <- '//homedir.mtu.edu/home/Desktop/stopwords.txt'
+#filePath <- '/Users/benhendrick/GitHub/CS 4821/Project-3/stopwords.txt'
 stopWords <- scan(filePath, what = 'c')
 
 num <- length(docClass)
@@ -44,25 +44,122 @@ for (i in 1:num){
 
 ## Part C
 
-# Remove testing documents
-docs.test <- docs[c(2,22)]
-docs.train <- docs[-c(2,22,11:20)]
+# Read the text and perform pre-processing
+words <- Corpus(VectorSource(docs))
+words <- tm_map(words, stripWhitespace)
+
+for (i in 1:30) {
+  if (i %in% 1:10){
+    words[[i]]$meta$genre = "comedy"
+  }
+  if (i %in% 11:20){
+    words[[i]]$meta$genre = "history"
+  }
+  if (i %in% 21:30){
+    words[[i]]$meta$genre = "tragedy"
+  }
+}
+
+# Sample indicies of training data
+words.train <- c(sample(c(2,22,11:20)))
+
+# Extract document-term matrix from training corpus
+words.train.dtm <- DocumentTermMatrix(words[-words.train])
+dim(words.train.dtm)
+
+# remove terms that occur in less than 10% of the documents
+words.train.dtm <- removeSparseTerms(words.train.dtm, 0.9)
+dim(words.train.dtm)
+
+# make a dictionary from the terms in the training corpus
+words.dict <- dimnames(words.train.dtm)[[2]]
+
+# use this dictionary to extract terms from test corpus
+words.test.dtm <- DocumentTermMatrix(words[c(2,22)], list(dictionary = words.dict))
+
+# Convert training data
+# Convert dtm to "normal" matrix
+words.train.dtm.bin <- inspect(words.train.dtm)
+
+# make the matrix binary for Bernoulli model 
+words.train.dtm.bin <- words.train.dtm.bin > 0
+
+# Convert mtraix to data frame
+words.train.dtm.bin <- as.data.frame(words.train.dtm.bin)
+
+# make all attributes (columns) categorical
+for (i in 1:dim(words.train.dtm)[2]) {
+  words.train.dtm.bin[,i] <- as.factor(words.train.dtm.bin[,i])
+}
+
+# Convert testing data
+# Convert dtm to "normal" matrix
+words.test.dtm.bin <- inspect(words.test.dtm)
+
+# make the matrix binary for Bernoulli model 
+words.test.dtm.bin <- words.test.dtm.bin > 0
+
+# Convert mtraix to data frame
+words.test.dtm.bin <- as.data.frame(words.test.dtm.bin)
+
+# make all attributes (columns) categorical
+for (i in 1:dim(words.test.dtm)[2]) {
+  words.test.dtm.bin[,i] <- as.factor(words.test.dtm.bin[,i])
+}
+
+# extract class labels
+words.lab <- as.vector(unlist(lapply(words,meta,tag="genre")))
+words.lab <- as.factor(words.lab)
+
+library(e1071)
+
+# fit model
+words.nb <- naiveBayes(words.train.dtm.bin, words.lab[-words.train], laplace = 1)
+words.nb.pred <- predict(words.nb, words.test.dtm.bin)
+
+# # Remove testing documents
+# docs.test <- docs[c(2,22)]
+# docs.train <- docs[-c(2,22,11:20)]
 
 ### i
 install.packages("tm")
 library(tm)
 
-# Create a term document matrix
-td.train <- t(TermDocumentMatrix(Corpus(VectorSource(docs.train))))
-td.test <- t(TermDocumentMatrix(Corpus(VectorSource(docs.test))))
+# uniqueWords <- function(docs) {
+#   allwords <- unlist(docs)
+#   tab.all <- tabulate(factor(allwords))
+#   
+#   words <- unique(allwords)
+#   words <- sort(words)
+#   numWords <- length(words)
+#   words.mat <- data.frame(word=words, count=tab.all)
+#   return(words.mat)
+# }
+# 
+# uniqueWords(docs.test)
 
-install.packages("e1071")
-library(e1071)
 
-nb.model <- naiveBayes(as.matrix(td.train), as.factor(docs.train))
-                       
-nb.train.fit <- predict(nb.model, docs.train)
-nb.test.fit <- predict(nb.model, docs.test)
+
+# # Create a term document matrix
+# docs.train.vs <- VectorSource(docs.train)
+# docs.test.vs <- VectorSource(docs.test)
+# 
+# docs.train.corp <- Corpus(docs.train.vs)
+# docs.test.corp <- Corpus(docs.test.vs)
+# 
+# td.train <- TermDocumentMatrix(docs.train.corp)
+# td.test <- TermDocumentMatrix(docs.test.corp)
+# 
+# td.train.df <- as.data.frame(inspect(td.train))
+# td.test.df <- as.data.frame(inspect(td.test))
+# 
+# install.packages("e1071")
+# library(e1071)
+# 
+# nb.model <- naiveBayes(td.train.df, docs.train)
+# 
+# nb.train.fit <- predict(nb.model, docs.train)
+# nb.test.fit <- predict(nb.model, docs.test)
 
 
 # Problem 3
@@ -84,8 +181,8 @@ spam.pred <- predict(spam.nb, spam.test)
 library(AUC)
 
 test.cm <- confusionMatrix(data=spam.pred,
-                            reference=spam.test$spam,
-                            positive=c("yes"))
+                           reference=spam.test$spam,
+                           positive=c("yes"))
 test.auc <- auc(sensitivity(spam.pred, spam.test$spam))
 
 ## Part D
@@ -95,19 +192,19 @@ tree.fit <- rpart(spam~.,
                   method = "class")
 tree.fit.test <- predict(tree.fit,spam.test,"class")
 tree.test.cm <- confusionMatrix(data=tree.fit.test,
-                           reference = spam.test$spam,
-                           positive=c("yes"))
+                                reference = spam.test$spam,
+                                positive=c("yes"))
 tree.test.auc <- auc(sensitivity(tree.fit.test, spam.test$spam))
 
 ## Part E
 library(randomForest)
 rf.fit <- randomForest(spam~., 
-                  data = spam.train, 
-                  method = "class")
+                       data = spam.train, 
+                       method = "class")
 rf.fit.test <- predict(rf.fit,spam.test,"class")
 rf.test.cm <- confusionMatrix(data=rf.fit.test,
-                                reference = spam.test$spam,
-                                positive=c("yes"))
+                              reference = spam.test$spam,
+                              positive=c("yes"))
 rf.test.auc <- auc(sensitivity(rf.fit.test, spam.test$spam))
 
 ## Part F
@@ -166,8 +263,8 @@ for (i in 1:length(spam.ens$spam.pred)) {
 }
 
 spam.ens.cm <- confusionMatrix(data=spam.ens.pred,
-                                reference = spam.test$spam,
-                                positive=c("yes"))
+                               reference = spam.test$spam,
+                               positive=c("yes"))
 spam.ens.auc <- auc(sensitivity(spam.ens.pred, spam.test$spam))
 
 ## Part H
