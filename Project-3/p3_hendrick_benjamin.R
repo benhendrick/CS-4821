@@ -7,8 +7,8 @@
 ## Part A
 
 # Load all files
-dataDir <- '//homedir.mtu.edu/home/Desktop/plays/plays'
-#dataDir <- '/Users/benhendrick/GitHub/CS 4821/Project-3/plays/'
+#dataDir <- '//homedir.mtu.edu/home/Desktop/plays/plays'
+dataDir <- '/Users/benhendrick/GitHub/CS 4821/Project-3/plays/'
 
 docs <- list()
 files <- dir(path = dataDir, full.names = TRUE)
@@ -16,23 +16,11 @@ for (i in 1:length(files)) {
   docs[[i]] <- tolower(scan(files[i], what = "", quiet = TRUE))
 }
 
-# Load class labels
-docClass <- c()
-for (i in 1:10) {
-  docClass[i] <- 1
-}
-for (i in 11:20) {
-  docClass[i] <- 2
-}
-for (i in 21:30) {
-  docClass[i] <- 3
-}
-
 ## Part B
 
 # Load stopwords.txt
-filePath <- '//homedir.mtu.edu/home/Desktop/stopwords.txt'
-#filePath <- '/Users/benhendrick/GitHub/CS 4821/Project-3/stopwords.txt'
+#filePath <- '//homedir.mtu.edu/home/Desktop/stopwords.txt'
+filePath <- '/Users/benhendrick/GitHub/CS 4821/Project-3/stopwords.txt'
 stopWords <- scan(filePath, what = 'c')
 
 num <- length(docClass)
@@ -44,122 +32,133 @@ for (i in 1:num){
 
 ## Part C
 
+library(tm)
 # Read the text and perform pre-processing
-words <- Corpus(VectorSource(docs))
+words <- Corpus(VectorSource(docs[-c(11:20)]))
 words <- tm_map(words, stripWhitespace)
+words <- tm_map(words, removePunctuation)
 
-for (i in 1:30) {
+for (i in 1:20) {
   if (i %in% 1:10){
     words[[i]]$meta$genre = "comedy"
   }
   if (i %in% 11:20){
-    words[[i]]$meta$genre = "history"
-  }
-  if (i %in% 21:30){
     words[[i]]$meta$genre = "tragedy"
   }
 }
 
+
 # Sample indicies of training data
-words.train <- c(sample(c(2,22,11:20)))
+words.test <- c(sample(c(2,12)))
 
-# Extract document-term matrix from training corpus
-words.train.dtm <- DocumentTermMatrix(words[-words.train])
-dim(words.train.dtm)
-
-# remove terms that occur in less than 10% of the documents
+words.train.dtm <- DocumentTermMatrix(words[-words.test])
 words.train.dtm <- removeSparseTerms(words.train.dtm, 0.9)
-dim(words.train.dtm)
 
-# make a dictionary from the terms in the training corpus
 words.dict <- dimnames(words.train.dtm)[[2]]
-
-# use this dictionary to extract terms from test corpus
-words.test.dtm <- DocumentTermMatrix(words[c(2,22)], list(dictionary = words.dict))
+words.test.dtm <- DocumentTermMatrix(words[words.test], list(dictionary = words.dict))
 
 # Convert training data
-# Convert dtm to "normal" matrix
 words.train.dtm.bin <- inspect(words.train.dtm)
-
-# make the matrix binary for Bernoulli model 
 words.train.dtm.bin <- words.train.dtm.bin > 0
-
-# Convert mtraix to data frame
 words.train.dtm.bin <- as.data.frame(words.train.dtm.bin)
 
-# make all attributes (columns) categorical
-for (i in 1:dim(words.train.dtm)[2]) {
-  words.train.dtm.bin[,i] <- as.factor(words.train.dtm.bin[,i])
-}
-
 # Convert testing data
-# Convert dtm to "normal" matrix
 words.test.dtm.bin <- inspect(words.test.dtm)
-
-# make the matrix binary for Bernoulli model 
 words.test.dtm.bin <- words.test.dtm.bin > 0
-
-# Convert mtraix to data frame
 words.test.dtm.bin <- as.data.frame(words.test.dtm.bin)
-
-# make all attributes (columns) categorical
-for (i in 1:dim(words.test.dtm)[2]) {
-  words.test.dtm.bin[,i] <- as.factor(words.test.dtm.bin[,i])
-}
 
 # extract class labels
 words.lab <- as.vector(unlist(lapply(words,meta,tag="genre")))
 words.lab <- as.factor(words.lab)
 
-library(e1071)
+# Bernouli Model
+trainBernouliNB <- function (C, D) {
+  V <- dimnames(words.test.dtm)[[2]]
+  N <- 2
+  prior <- c()
+  condprob <- data.frame(matrix(NA, nrow = length(V), ncol = 2))
+  
+  for (c in 1:2) {
+    Nc <- 1
+    prior <- c(prior, Nc/N)
+    
+    for (t in 1:length(V)) {
+      ifelse(words.test.dtm.bin[c,t] == 'TRUE',
+             Ntc <- 1,
+             Ntc <- 0)
+      condprob[t,c] <- (Ntc + 1)/(Nc + 2)
+    }
+  }
+  output <- list()
+  output$V <- V
+  output$prior <- prior
+  output$condprob <- condprob
+  
+  return(output)
+}
 
-# fit model
-words.nb <- naiveBayes(words.train.dtm.bin, words.lab[-words.train], laplace = 1)
-words.nb.pred <- predict(words.nb, words.test.dtm.bin)
+bern.train <- trainBernouliNB(unique(words.lab), docs[words.test])
 
-# # Remove testing documents
-# docs.test <- docs[c(2,22)]
-# docs.train <- docs[-c(2,22,11:20)]
+applyBernoulliNB <- function (C, V, prior, condprob, d) {
+  Vd <- colnames(words.test.dtm.bin[d, which(words.test.dtm.bin[d,]== 'TRUE')])
+  score <- c()
+  score <- c(score, log(prior[d]))
+    
+  for (t in 1:length(V)) {
+    ifelse(dimnames(words.train.dtm)[[2]][t] %in% Vd == TRUE,
+           score <- score + log(condprob[t,d]),
+           score <- score + log(1-condprob[t,d]))
+  }
+  return (max(score))
+}
 
-### i
-install.packages("tm")
-library(tm)
+bern.com <- applyBernoulliNB(unique(words.lab), docs[words.test], bern.train$prior, bern.train$condprob, 1)
+bern.trag <- applyBernoulliNB(unique(words.lab), docs[words.test], bern.train$prior, bern.train$condprob, 2)
+exp(bern.com)
+exp(bern.trag)
 
-# uniqueWords <- function(docs) {
-#   allwords <- unlist(docs)
-#   tab.all <- tabulate(factor(allwords))
-#   
-#   words <- unique(allwords)
-#   words <- sort(words)
-#   numWords <- length(words)
-#   words.mat <- data.frame(word=words, count=tab.all)
-#   return(words.mat)
-# }
-# 
-# uniqueWords(docs.test)
+# Multinomial model
+trainMultinomialNB <- function(C,D) {
+  V <- dimnames(words.test.dtm)[[2]]
+  N <- 2
+  prior <- c()
+  condprod <- c()
+  for (c in 1:2) {
+    textC <- c()
+    Nc <- 1
+    prior <- c(prior, Nc/N)
+  }
+  
+  Tct.com <- data.frame(inspect(words.test.dtm))[1, which(data.frame(inspect(words.test.dtm))[1,] != 0)]
+  Tct.trag <- data.frame(inspect(words.test.dtm))[2, which(data.frame(inspect(words.test.dtm))[2,] != 0)]
+  condprod.com <- (Tct.com + 1)/(sum(Tct.com + 1))
+  condprod.trag <- (Tct.trag + 1)/(sum(Tct.trag + 1))
+  
+  
+  output <- list()
+  output$V <- V
+  output$prior <- prior
+  output$condprod.com <- condprod.com
+  output$condprod.trag <- condprod.trag
+  
+  return (output)
+}  
+
+mult.train <- trainMultinomialNB(unique(words.lab), docs[words.test])
 
 
+applyMultinomailNB <- function(C, V, prior, condprod, d) {
+  score <- log(prior[d])
+  score <- score + log(condprod)
+  max(score)
+}
 
-# # Create a term document matrix
-# docs.train.vs <- VectorSource(docs.train)
-# docs.test.vs <- VectorSource(docs.test)
-# 
-# docs.train.corp <- Corpus(docs.train.vs)
-# docs.test.corp <- Corpus(docs.test.vs)
-# 
-# td.train <- TermDocumentMatrix(docs.train.corp)
-# td.test <- TermDocumentMatrix(docs.test.corp)
-# 
-# td.train.df <- as.data.frame(inspect(td.train))
-# td.test.df <- as.data.frame(inspect(td.test))
-# 
-# install.packages("e1071")
-# library(e1071)
-# 
-# nb.model <- naiveBayes(td.train.df, docs.train)
-# 
-# nb.train.fit <- predict(nb.model, docs.train)
-# nb.test.fit <- predict(nb.model, docs.test)
+mult.com <- applyMultinomailNB(unique(words.lab), mult.train$V, 
+                               mult.train$prior, mult.train$condprod.com, 1)
+mult.trag <- applyMultinomailNB(unique(words.lab), mult.train$V, 
+                               mult.train$prior, mult.train$condprod.trag, 2)
+exp(mult.com)
+exp(mult.trag)
 
 
 # Problem 3
