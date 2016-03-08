@@ -1,13 +1,15 @@
-# CS 4821 
-# Project 3
-# Started 2/22/2016
+---
+title: "CS 4821 Project 3"
+author: "Benjamin Hendrick"
+date: "March 7, 2016"
+output: html_document
+---
 
 # Problem 1
-
 ## Part A
+Load the data place the documents into an array of documents. This will be the document space.
 
-# Load all files
-#dataDir <- '//homedir.mtu.edu/home/Desktop/plays/plays'
+```{r}
 dataDir <- '/Users/benhendrick/GitHub/CS 4821/Project-3/plays/'
 
 docs <- list()
@@ -15,23 +17,25 @@ files <- dir(path = dataDir, full.names = TRUE)
 for (i in 1:length(files)) {
   docs[[i]] <- tolower(scan(files[i], what = "", quiet = TRUE))
 }
+```
 
 ## Part B
+Load the stopwords and remove them from the documents in `docs`.
 
-# Load stopwords.txt
-#filePath <- '//homedir.mtu.edu/home/Desktop/stopwords.txt'
+```{r}
 filePath <- '/Users/benhendrick/GitHub/CS 4821/Project-3/stopwords.txt'
 stopWords <- scan(filePath, what = 'c')
-
-num <- length(docClass)
-
-# Remove stopwords from text files 
-for (i in 1:num){
+for (i in 1:30){
   docs[[i]] <- docs[[i]][!docs[[i]] %in% stopWords]
 }
+```
 
 ## Part C
+### (i)
 
+Create a term document matrix for the training and testing documents. Use the `tm` pack to create the matrix with the `DocumentTermMatrix`. 
+
+```{r, results='hide'}
 library(tm)
 # Read the text and perform pre-processing
 words <- Corpus(VectorSource(docs[-c(11:20)]))
@@ -57,21 +61,24 @@ words.train.dtm <- removeSparseTerms(words.train.dtm, 0.9)
 words.dict <- dimnames(words.train.dtm)[[2]]
 words.test.dtm <- DocumentTermMatrix(words[words.test], list(dictionary = words.dict))
 
-# Convert training data
+# Convert training data to binary
 words.train.dtm.bin <- inspect(words.train.dtm)
 words.train.dtm.bin <- words.train.dtm.bin > 0
 words.train.dtm.bin <- as.data.frame(words.train.dtm.bin)
 
-# Convert testing data
+# Convert testing data binary
 words.test.dtm.bin <- inspect(words.test.dtm)
 words.test.dtm.bin <- words.test.dtm.bin > 0
 words.test.dtm.bin <- as.data.frame(words.test.dtm.bin)
+```
 
-# extract class labels
-words.lab <- as.vector(unlist(lapply(words,meta,tag="genre")))
-words.lab <- as.factor(words.lab)
+The term document matrix for the training documents is named `words.train.dtm`. The term documen matrix for the testing documents is named `words.test.dtm`. The binary versions of the training and testing document matrix are named `words.train.dtm.bin` and `words.test.dtm.bin`, respectively.
 
-# Bernouli Model
+### (ii)
+
+The following function trains the Bernoulli model of the Naive Bayes. This model uses the alogrithm Manning, C., Raghavan, P., Schutze, H. Introduction to Information Retrieval, Cambridge University Press, 2008.
+
+```{r, results='hide'}
 trainBernoulliNB <- function (C, D) {
   V <- dimnames(words.train.dtm)[[2]]
   N <- 2
@@ -96,9 +103,17 @@ trainBernoulliNB <- function (C, D) {
   
   return(output)
 }
+```
 
-bern.train <- trainBernoulliNB(unique(words.lab), docs[-words.test])
+Train the model with the testing documents.
 
+```{r, results='hide'}
+bern.train <- trainBernoulliNB(unique(words.lab), docs[words.test])
+```
+
+The following function applies the Bernoulli model of the Naive Bayes to a given document. This algorithm is also from the cited text above.
+
+```{r, results='hide'}
 applyBernoulliNB <- function (C, V, prior, condprob, d) {
   Vd <- colnames(words.test.dtm.bin[d, which(words.test.dtm.bin[d,]== 'TRUE')])
   score <- c()
@@ -111,13 +126,22 @@ applyBernoulliNB <- function (C, V, prior, condprob, d) {
   }
   return (max(score))
 }
+```
 
+Apply the Bernoulli model for the comedy testing document (1) and tragedy testing document (2). 
+
+```{r, results='hide'}
 bern.com <- applyBernoulliNB(unique(words.lab), docs[words.test], bern.train$prior, bern.train$condprob, 1)
 bern.trag <- applyBernoulliNB(unique(words.lab), docs[words.test], bern.train$prior, bern.train$condprob, 2)
-exp(bern.com)
-exp(bern.trag)
+```
 
-# Multinomial model
+Take the exponential of the results because both are `log` transformed. Thefore, $P(C=comedy | \textbf{X}) = 0.2222222$  and $P(C = tragedy | \textbf{X}) = 0.05555556$.
+
+### (iii)
+
+The following formula train the Multinomial model of the Naive Bayes. This model uses the alogrithm Manning, C., Raghavan, P., Schutze, H. Introduction to Information Retrieval, Cambridge University Press, 2008.
+
+```{r, results='hide'}
 trainMultinomialNB <- function(C,D) {
   V <- dimnames(words.test.dtm)[[2]]
   N <- 2
@@ -143,37 +167,66 @@ trainMultinomialNB <- function(C,D) {
   
   return (output)
 }  
+```
 
+Train the model with the testing docs.
+
+```{r, results='hide'}
 mult.train <- trainMultinomialNB(unique(words.lab), docs[words.test])
+```
 
+The following function applies the Multinomial model of the Naive Bayes to a given document. This algorithm is also from the cited text above.
 
+```{r, results ='hide'}
 applyMultinomailNB <- function(C, V, prior, condprod, d) {
   score <- log(prior[d])
   score <- score + log(condprod)
   max(score)
 }
+```
 
+Apply the Bernoulli model for the comedy testing document (1) and tragedy testing document (2).
+
+```{r}
 mult.com <- applyMultinomailNB(unique(words.lab), mult.train$V, 
                                mult.train$prior, mult.train$condprod.com, 1)
 mult.trag <- applyMultinomailNB(unique(words.lab), mult.train$V, 
                                mult.train$prior, mult.train$condprod.trag, 2)
-exp(mult.com)
-exp(mult.trag)
+```
 
+Take the exponential of the results because both are `log` transformed. Thefore, $P(C=comedy | \textbf{X}) = 0.005511269$  and $P(C = tragedy | \textbf{X}) = 0.009340312$.
+
+# Problem 2
+
+There are some Shakespear words that have similar meanings and uses to words used today. Words such as *thine*, *thee*, and  *thou* are examples that occur more than 50 times in the document 1 alone, according to the term document matrix. These Shakespearian pronouns should be removed to increase accuracy.
 
 # Problem 3
+## Part A
+
+Load the `spam` data and remove the specified columns.
+
+```{r, results='hide'}
 ## Part A
 filePath <- '/Users/benhendrick/GitHub/CS 4821/Project-3/spam.csv'
 spam <- read.csv(filePath)
 spam <- spam[,-c(1,2,7,11,19,20)]
+```
 
 ## Part B
+
+Split the data into a training and testing set with an 80/20 split by using the `createDataPartition` function in the `caret` package.
+
+```{r, results='hide'}
 library(caret)
 rows <- createDataPartition(spam$name, p = 0.8, list = FALSE)
 spam.train <- spam[rows,]
 spam.test <- spam[-rows,]
+```
 
 ## Part C
+Use the `naiveBayes` function to predict spam.
+
+```{r, results='hide'}
 library(e1071)
 spam.nb <- naiveBayes(spam.train[,15],spam.train$spam)
 spam.pred <- predict(spam.nb, spam.test)
@@ -184,8 +237,21 @@ test.cm <- confusionMatrix(data=spam.pred,
                            reference=spam.test$spam,
                            positive=c("yes"))
 test.auc <- auc(sensitivity(spam.pred, spam.test$spam))
+```
+
+The accuracy, error, and AUC of the Naive Bayes classifier are given in the following table.
+
+Naive Bayes  | &nbsp; 
+---------|-----------------
+Accuracy | `r test.cm$overall[1]`
+Error    |`r 1-test.cm$overall[1]`
+AUC      | `r test.auc`
 
 ## Part D
+
+Learn a decision tree with the `rparts` function.
+
+```{r, results='hide'}
 library(rpart)
 tree.fit <- rpart(spam~., 
                   data = spam.train, 
@@ -195,8 +261,21 @@ tree.test.cm <- confusionMatrix(data=tree.fit.test,
                                 reference = spam.test$spam,
                                 positive=c("yes"))
 tree.test.auc <- auc(sensitivity(tree.fit.test, spam.test$spam))
+```
+
+The accuracy, error, and AUC of the Decision Tree classifier are given in the following table.
+
+Decision Tree | &nbsp; 
+---------|-----------------
+Accuracy | `r tree.test.cm$overall[1]`
+Error    |`r 1-tree.test.cm$overall[1]`
+AUC      | `r tree.test.auc`
 
 ## Part E
+
+Use the `randomForest` funciton to predict spam.
+
+```{r, results='hide'}
 library(randomForest)
 rf.fit <- randomForest(spam~., 
                        data = spam.train, 
@@ -206,8 +285,21 @@ rf.test.cm <- confusionMatrix(data=rf.fit.test,
                               reference = spam.test$spam,
                               positive=c("yes"))
 rf.test.auc <- auc(sensitivity(rf.fit.test, spam.test$spam))
+```
+
+The accuracy, error, and AUC of the Random Forest classifier are given in the following table.
+
+Random Forest | &nbsp; 
+---------|-----------------
+Accuracy | `r rf.test.cm$overall[1]`
+Error    |`r 1-rf.test.cm$overall[1]`
+AUC      | `r rf.test.auc`
 
 ## Part F
+
+The following loop performs k-svm classifiers with costs 0.01, 0.1, 1, 10, 100. 
+
+```{r}
 svm.cost <- c(0.01,0.1,1,10,100)
 svm.acc <- c()
 svm.err <- c()
@@ -233,7 +325,22 @@ for (i in svm.cost){
 
 svm.summary <- data.frame(svm.cost,svm.acc,svm.err,svm.auc)
 svm.cost.best <- svm.summary[which(svm.summary$svm.auc==max(svm.summary$svm.auc)),"svm.cost"]
+```
 
+The costs, accuracy, errors, and AUCs of the Support Vector Machines models are given in the table below.
+
+Cost | Accuracy | Error | AUC
+----- |----------|-------|-----
+`r svm.summary[1,1]` | `r svm.summary[1,2]` | `r svm.summary[1,3]` | `r svm.summary[1,4]`
+`r svm.summary[2,1]` | `r svm.summary[2,2]` | `r svm.summary[2,3]` | `r svm.summary[2,4]`
+`r svm.summary[3,1]` | `r svm.summary[3,2]` | `r svm.summary[3,3]` | `r svm.summary[3,4]`
+`r svm.summary[4,1]` | `r svm.summary[4,2]` | `r svm.summary[4,3]` | `r svm.summary[4,4]`
+`r svm.summary[5,1]` | `r svm.summary[5,2]` | `r svm.summary[5,3]` | `r svm.summary[5,4]`
+
+The best cost is `r svm.cost.best` becasue it has the max AUC.
+
+Fit the k-svm model with the best cost.
+```{r, results='hide'}
 library(kernlab)
 svm.fit <- ksvm(spam~., 
                 data = spam.train,
@@ -241,8 +348,13 @@ svm.fit <- ksvm(spam~.,
                 kpar = "automatic",
                 C = svm.cost.best, epsilon = 0.1)
 svm.fit.test <- predict(svm.fit,spam.test[,-15])
+```
 
 ## Part G
+
+The following loop performs an ensamble classifer with a Naive Bayes, Decision Tree, Random Forest, and SVM models. There are only four models, so a majority cannot be definded. If two or more of the models in the ensamble predict "no", then the ensabmel classifier will predict "no".
+
+```{r}
 spam.ens <- data.frame(spam.test$spam, spam.pred, tree.fit.test, rf.fit.test, svm.fit.test)
 spam.ens.pred <- c()
 k <- 0
@@ -266,15 +378,35 @@ spam.ens.cm <- confusionMatrix(data=spam.ens.pred,
                                reference = spam.test$spam,
                                positive=c("yes"))
 spam.ens.auc <- auc(sensitivity(spam.ens.pred, spam.test$spam))
+```
+
+The accuracy, error, and AUC of the ensamble classifier are given in the following table.
+
+Ensamble Classifer | &nbsp; 
+---------|-----------------
+Accuracy | `r spam.ens.cm$overall[1]`
+Error    |`r 1-spam.ens.cm$overall[1]`
+AUC      | `r spam.ens.auc`
 
 ## Part H
-install.packages("adabag")
+
+Use bagging to fit an ensamble of 100 trees to the training data with the `bagging` function with `mfinal=100`.
+
+```{r, results='hide'}
 library(adabag)
 bag.fit <- bagging(spam~., data = spam.train, mfinal = 100, method = "class")
 bag.fit.test <- predict.bagging(bag.fit,spam.test)
-bag.fit.test$error
+```
+
+The error of the bagging function is `r bag.fit.test$error`.
 
 ## Part I
+
+Use boosting to fit an ensamble of 100 trees to the training data with the `boosting` function with `mfinal=100`.
+
+```{r, results='hide'}
 boost.fit <- boosting(spam~., data = spam.train, mfinal = 100, method = "class")
 boost.fit.test <- predict.boosting(boost.fit,spam.test)
-boost.fit.test$error
+```
+
+The error of the boosting function is `r boost.fit.test$error`
