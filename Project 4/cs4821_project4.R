@@ -161,8 +161,28 @@ tree.college2.avg <- hclust(college2.dist, method = "average")
 plot(tree.college2.avg, hang = -1e-10, xlab = "")
 
 # Part C
-tree.college2.single <- hclust(college2.dist, met?hhod = "single")
+tree.college2.single <- hclust(college2.dist, method = "single")
 plot(tree.college2.single, hang = -1e-10, xlab="")
 abline(h = 30000, lty = 3, lwd = 2)
 
 # Part D
+pc <- princomp(college.num)
+ggplot(data.frame(pc$scores),aes(x = Comp.1, y = Comp.2)) + 
+  geom_point() + 
+  geom_text(aes(label=college[,2]),hjust=0, vjust=1) +
+  labs(x = "Component 1", y = "Component 2", title = "Component 1 vs. Component 2")
+
+# Part E
+
+
+# Problem 4
+music <- read.csv("~/GitHub/CS 4821/Project 4/music.csv")
+music.num <- music[,4:8]
+
+music.norm <- scale(music.num)
+
+tree.music.single <- hclust(dist(music.norm), method = "single")
+plot(tree.music.single, hang = -1e-10, xlab="")
+
+tree.music.complete <- hclust(dist(music.norm), method = "complete")
+plot(tree.music.complete, hang = -1e-10, xlab = "")
