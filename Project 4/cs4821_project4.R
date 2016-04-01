@@ -156,7 +156,7 @@ college2.num <-college2[,-c(1:3)]
 college2.dist <- dist(college2.num)
 tree.college2.comp <- hclust(college2.dist, method = "complete")
 plot(tree.college2.comp, hang = -1e-10, xlab="")
-
+  
 tree.college2.avg <- hclust(college2.dist, method = "average")
 plot(tree.college2.avg, hang = -1e-10, xlab = "")
 
@@ -173,6 +173,8 @@ ggplot(data.frame(pc$scores),aes(x = Comp.1, y = Comp.2)) +
   labs(x = "Component 1", y = "Component 2", title = "Component 1 vs. Component 2")
 
 # Part E
+college2.km <- kmeans(college2.num,3,algorithm = "Lloy")
+fitted(college2.km)
 
 
 # Problem 4
@@ -182,7 +184,16 @@ music.num <- music[,4:8]
 music.norm <- scale(music.num)
 
 tree.music.single <- hclust(dist(music.norm), method = "single")
-plot(tree.music.single, hang = -1e-10, xlab="")
+plot(tree.music.single, hang = -1e-10, xlab="", labels = music$Type)
+abline(h = 2, lty = 3, lwd = 2)
 
 tree.music.complete <- hclust(dist(music.norm), method = "complete")
-plot(tree.music.complete, hang = -1e-10, xlab = "")
+plot(tree.music.complete, hang = -1e-10, xlab = "", labels = music$Type)
+abline(h = 4, lty = 3, lwd = 2)
+
+plot(tree.music.single, hang = -1e-10, xlab="", labels = music$Artist)
+abline(h = 1, lty = 3, lwd = 2)
+
+plot(tree.music.complete, hang = -1e-10, xlab = "", labels = music$Artist)
+abline(h = 2.3, lty = 3, lwd = 2)
+
