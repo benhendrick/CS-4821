@@ -1,0 +1,46 @@
+---
+title: "CS 4821 Project 5"
+author: "Benjamin Hendrick"
+date: "Friday, April 08, 2016"
+output: html_document
+---
+
+# Question 1
+
+## Part A
+
+Given the database of transactions (with min-support = 2),  there are $2^{8}-1 = 255$ frequent patterns.
+
+$$\binom{8}{1}+ \binom{8}{2}+ \ldots +\binom{8}{8}=2^{8}-1=255$$
+
+The eight items in the frequent item set are $I1, I2, I3, I4, I5, I6, I7,$ and $I7$
+
+## Part B
+
+The set of frequent *closed* items is:
+
+- $\{I1, I2, I3, I4, I5, I5, I6, I7, I8\} : 2$
+- $\{I1, I2, I3, I4, I5\} : 1$
+- $\{I6, I7, I8\} : 1$
+
+## Part C
+
+The set of frequent *max*-patterns is:
+
+- $\{I1, I2, I3, I4, I5, I5, I6, I7, I8\} : 2$
+
+## Part D
+
+## Part E
+
+For the association rule $I1 \rightarrow I6$:
+
+- Support: $s = \frac{2}{5} = 0.4$
+- Confidence: $c= \frac{2}{3} = 0.66$
+- Lift: $l = \frac{2/3}{3/5} = 1.11$
+- Interest: $i = \frac{2/5}{(3/5)^2} = 1.11$
+
+
+# Question 2
+
+## Part A
