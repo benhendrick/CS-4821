@@ -31,6 +31,10 @@ The set of frequent *max*-patterns is:
 
 ## Part D
 
+An example of the association rule $\{I1, I2, I3, I4, I5, I* \rightarrow I* \}$ with min-support = 2 and min-confidence = 70% is $\{I1, I2, I3, I4, I5, I6 \rightarrow I7 \}$
+
+$I1, I2, I3, I4, I5, I6,$ and $I7$ all occur at least twice. The confidence in the association rule is $c = \frac{2}{2} = 1$.
+
 ## Part E
 
 For the association rule $I1 \rightarrow I6$:
@@ -43,4 +47,58 @@ For the association rule $I1 \rightarrow I6$:
 
 # Question 2
 
+Load the data.
+
+```{r}
+library(arules)
+items <- read.transactions("items.txt", format = "basket", sep=",", rm.duplicates =TRUE)
+```
 ## Part A
+
+Create the ariori.
+
+```{r}
+items.rules <- apriori(items, parameter = list(supp = 0.6, conf = 0.8))
+inspect(items.rules)
+```
+
+The frequent items sets according the appriory are $\{M, O, Y, E, K, EO, KO\}$
+
+
+
+## Part B
+
+# Question 3
+
+Suppose the given contigency table
+
+*Transactions* | Hot Dogs | Not Hot Dogs | $\sum_{row}$ 
+-|----- | ----- | ----
+**Hamburger** | 2000 | 500 | 2500
+**Not Hamburger** | 1000 | 1500 | 2500 
+$\sum_{col}$ | 3000 | 2000 | 5000
+
+Set up the data in `R`.
+
+```{r}
+trans <- read.transactions("trans.txt", format = "basket",sep=",")
+rules <- apriori(trans, parameter = list(supp = 0.25, conf = 0.5, target="rules"))
+interestMeasure(rules, "cosine", trans)
+```
+
+## Part A
+
+Let hot dogs = $D$ and hamburgers = $B$
+
+Given the association rule $D \rightarrow B$, we find the confidence is $c = P(B | D) = 2000/3000 \approx 67\%$ We should consider that $P(D) = 3000/5000 = 60\%$ in the first place. Becasue of this fact, I would not say that the association rule is good but perhaps not strong.
+
+## Part B
+
+Let's look at $P(D | B) = 2000/2500 = 80%$. Also, $P(B) = 2500/5000 = 50%$. Because the confidence in the association rule $B \rightarrow D$ is so much higher than the probability of $B$ I would say that the purchase between hot dogs and hamburgers is not independent. People who by hamburgers will probably buy hot dogs too. 
+
+Becasue $P(B \cap D)  = 0.4 > P(B) \times P(D) = 0.5 \times 0.6 = 0.3$, the are positively correlated.
+
+## Part C
+
+
+

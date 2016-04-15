@@ -141,6 +141,8 @@ $(document).ready(function () {
 </div>
 <div id="part-d" class="section level2">
 <h2>Part D</h2>
+<p>An example of the association rule <span class="math inline">\(\{I1, I2, I3, I4, I5, I* \rightarrow I* \}\)</span> with min-support = 2 and min-confidence = 70% is <span class="math inline">\(\{I1, I2, I3, I4, I5, I6 \rightarrow I7 \}\)</span></p>
+<p><span class="math inline">\(I1, I2, I3, I4, I5, I6,\)</span> and <span class="math inline">\(I7\)</span> all occur at least twice. The confidence in the association rule is <span class="math inline">\(c = \frac{2}{2} = 1\)</span>.</p>
 </div>
 <div id="part-e" class="section level2">
 <h2>Part E</h2>
@@ -155,8 +157,133 @@ $(document).ready(function () {
 </div>
 <div id="question-2" class="section level1">
 <h1>Question 2</h1>
+<p>Load the data.</p>
+<pre class="r"><code>library(arules)</code></pre>
+<pre><code>## Loading required package: Matrix
+## 
+## Attaching package: 'arules'
+## 
+## The following objects are masked from 'package:base':
+## 
+##     abbreviate, write</code></pre>
+<pre class="r"><code>items &lt;- read.transactions(&quot;items.txt&quot;, format = &quot;basket&quot;, sep=&quot;,&quot;, rm.duplicates =TRUE)</code></pre>
+<pre><code>## distribution of transactions with duplicates:
+## 1 
+## 1</code></pre>
 <div id="part-a-1" class="section level2">
 <h2>Part A</h2>
+<p>Create the ariori.</p>
+<pre class="r"><code>items.rules &lt;- apriori(items, parameter = list(supp = 0.6, conf = 0.8))</code></pre>
+<pre><code>## Apriori
+## 
+## Parameter specification:
+##  confidence minval smax arem  aval originalSupport support minlen maxlen
+##         0.8    0.1    1 none FALSE            TRUE     0.6      1     10
+##  target   ext
+##   rules FALSE
+## 
+## Algorithmic control:
+##  filter tree heap memopt load sort verbose
+##     0.1 TRUE TRUE  FALSE TRUE    2    TRUE
+## 
+## Absolute minimum support count: 3 
+## 
+## set item appearances ...[0 item(s)] done [0.00s].
+## set transactions ...[11 item(s), 5 transaction(s)] done [0.00s].
+## sorting and recoding items ... [5 item(s)] done [0.00s].
+## creating transaction tree ... done [0.00s].
+## checking subsets of size 1 2 3 done [0.00s].
+## writing ... [10 rule(s)] done [0.00s].
+## creating S4 object  ... done [0.00s].</code></pre>
+<pre class="r"><code>inspect(items.rules)</code></pre>
+<pre><code>##    lhs      rhs support confidence lift
+## 1  {}    =&gt; {E} 0.8     0.8        1.00
+## 2  {}    =&gt; {K} 1.0     1.0        1.00
+## 3  {M}   =&gt; {K} 0.6     1.0        1.00
+## 4  {O}   =&gt; {E} 0.6     1.0        1.25
+## 5  {O}   =&gt; {K} 0.6     1.0        1.00
+## 6  {Y}   =&gt; {K} 0.6     1.0        1.00
+## 7  {E}   =&gt; {K} 0.8     1.0        1.00
+## 8  {K}   =&gt; {E} 0.8     0.8        1.00
+## 9  {E,O} =&gt; {K} 0.6     1.0        1.00
+## 10 {K,O} =&gt; {E} 0.6     1.0        1.25</code></pre>
+<p>The frequent items sets are <span class="math inline">\(\{M, O, Y, E, K, EO, KO\}\)</span></p>
+</div>
+<div id="part-b-1" class="section level2">
+<h2>Part B</h2>
+</div>
+</div>
+<div id="question-3" class="section level1">
+<h1>Question 3</h1>
+<p>Suppose the given contigency table</p>
+<table>
+<thead>
+<tr class="header">
+<th align="left"><em>Transactions</em></th>
+<th align="left">Hot Dogs</th>
+<th align="left">Not Hot Dogs</th>
+<th align="left"><span class="math inline">\(\sum_{row}\)</span></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left"><strong>Hamburger</strong></td>
+<td align="left">2000</td>
+<td align="left">500</td>
+<td align="left">2500</td>
+</tr>
+<tr class="even">
+<td align="left"><strong>Not Hamburger</strong></td>
+<td align="left">1000</td>
+<td align="left">1500</td>
+<td align="left">2500</td>
+</tr>
+<tr class="odd">
+<td align="left"><span class="math inline">\(\sum_{col}\)</span></td>
+<td align="left">3000</td>
+<td align="left">2000</td>
+<td align="left">5000</td>
+</tr>
+</tbody>
+</table>
+<p>Set up the data in <code>R</code>.</p>
+<pre class="r"><code>trans &lt;- read.transactions(&quot;trans.txt&quot;, format = &quot;basket&quot;,sep=&quot;,&quot;)
+rules &lt;- apriori(trans, parameter = list(supp = 0.25, conf = 0.5, target=&quot;rules&quot;))</code></pre>
+<pre><code>## Apriori
+## 
+## Parameter specification:
+##  confidence minval smax arem  aval originalSupport support minlen maxlen
+##         0.5    0.1    1 none FALSE            TRUE    0.25      1     10
+##  target   ext
+##   rules FALSE
+## 
+## Algorithmic control:
+##  filter tree heap memopt load sort verbose
+##     0.1 TRUE TRUE  FALSE TRUE    2    TRUE
+## 
+## Absolute minimum support count: 1250 
+## 
+## set item appearances ...[0 item(s)] done [0.00s].
+## set transactions ...[4 item(s), 5000 transaction(s)] done [0.00s].
+## sorting and recoding items ... [4 item(s)] done [0.00s].
+## creating transaction tree ... done [0.00s].
+## checking subsets of size 1 2 done [0.00s].
+## writing ... [7 rule(s)] done [0.00s].
+## creating S4 object  ... done [0.00s].</code></pre>
+<pre class="r"><code>interestMeasure(rules, &quot;cosine&quot;, trans)</code></pre>
+<pre><code>## [1] 0.7071068 0.7071068 0.7745967 0.6708204 0.6708204 0.7302967 0.7302967</code></pre>
+<div id="part-a-2" class="section level2">
+<h2>Part A</h2>
+<p>Let hot dogs = <span class="math inline">\(D\)</span> and hamburgers = <span class="math inline">\(B\)</span></p>
+<p>Given the association rule <span class="math inline">\(D \rightarrow B\)</span>, we find the confidence is <span class="math inline">\(c = P(B | D) = 2000/3000 \approx 67\%\)</span> We should consider that <span class="math inline">\(P(D) = 3000/5000 = 60\%\)</span> in the first place. Becasue of this fact, I would not say that the association rule is good but perhaps not strong.</p>
+</div>
+<div id="part-b-2" class="section level2">
+<h2>Part B</h2>
+<p>Let’s look at <span class="math inline">\(P(D | B) = 2000/2500 = 80%\)</span>. Also, <span class="math inline">\(P(B) = 2500/5000 = 50%\)</span>. Because the confidence in the association rule <span class="math inline">\(B \rightarrow D\)</span> is so much higher than the probability of <span class="math inline">\(B\)</span> I would say that the purchase between hot dogs and hamburgers is not independent. People who by hamburgers will probably buy hot dogs too.</p>
+<p>Becasue <span class="math inline">\(P(B \cap D) = 0.4 &gt; P(B) \times P(D) = 0.5 \times 0.6 = 0.3\)</span>, the are positively correlated.</p>
+</div>
+<div id="part-c-1" class="section level2">
+<h2>Part C</h2>
 </div>
 </div>
 
