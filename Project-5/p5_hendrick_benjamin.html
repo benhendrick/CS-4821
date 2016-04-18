@@ -157,21 +157,27 @@ $(document).ready(function () {
 </div>
 <div id="question-2" class="section level1">
 <h1>Question 2</h1>
+<div id="part-a-1" class="section level2">
+<h2>Part A</h2>
+<p>Refer to other submitted documents. The document <code>APRIORI.pdf</code> contains the apriori. The document <code>FP.pdf</code> contains the FP-growth tree.</p>
+</div>
+<div id="part-b-1" class="section level2">
+<h2>Part B</h2>
+<p>Given the rule, the <em>strong</em> association rules are</p>
+<ul>
+<li><span class="math inline">\(\{O,K\} \rightarrow \{E\} : s= 3/5, c=3/3\)</span></li>
+<li><span class="math inline">\(\{O,E\} \rightarrow \{K\} : s=3/5, c=3/3\)</span></li>
+<li><span class="math inline">\(\{K,E\} \rightarrow \{O\} : s =3/5, c=3/4\)</span></li>
+</ul>
+</div>
+</div>
+<div id="question-3" class="section level1">
+<h1>Question 3</h1>
 <p>Load the data.</p>
-<pre class="r"><code>library(arules)</code></pre>
-<pre><code>## Loading required package: Matrix
-## 
-## Attaching package: 'arules'
-## 
-## The following objects are masked from 'package:base':
-## 
-##     abbreviate, write</code></pre>
 <pre class="r"><code>items &lt;- read.transactions(&quot;items.txt&quot;, format = &quot;basket&quot;, sep=&quot;,&quot;, rm.duplicates =TRUE)</code></pre>
 <pre><code>## distribution of transactions with duplicates:
 ## 1 
 ## 1</code></pre>
-<div id="part-a-1" class="section level2">
-<h2>Part A</h2>
 <p>Create the ariori.</p>
 <pre class="r"><code>items.rules &lt;- apriori(items, parameter = list(supp = 0.6, conf = 0.8))</code></pre>
 <pre><code>## Apriori
@@ -207,15 +213,11 @@ $(document).ready(function () {
 ## 8  {K}   =&gt; {E} 0.8     0.8        1.00
 ## 9  {E,O} =&gt; {K} 0.6     1.0        1.00
 ## 10 {K,O} =&gt; {E} 0.6     1.0        1.25</code></pre>
-<p>The frequent items sets are <span class="math inline">\(\{M, O, Y, E, K, EO, KO\}\)</span></p>
+<p>The frequent items sets according the apriori are {M}, {O}, {K}, {E}, {Y}, {O,E}, {O,K}. This frequent item set is smaller than the one found by the manual apriori in 2.A.</p>
 </div>
-<div id="part-b-1" class="section level2">
-<h2>Part B</h2>
-</div>
-</div>
-<div id="question-3" class="section level1">
-<h1>Question 3</h1>
-<p>Suppose the given contigency table</p>
+<div id="question-4" class="section level1">
+<h1>Question 4</h1>
+<p>Suppose the given contingency table</p>
 <table>
 <thead>
 <tr class="header">
@@ -270,20 +272,83 @@ rules &lt;- apriori(trans, parameter = list(supp = 0.25, conf = 0.5, target=&quo
 ## checking subsets of size 1 2 done [0.00s].
 ## writing ... [7 rule(s)] done [0.00s].
 ## creating S4 object  ... done [0.00s].</code></pre>
-<pre class="r"><code>interestMeasure(rules, &quot;cosine&quot;, trans)</code></pre>
-<pre><code>## [1] 0.7071068 0.7071068 0.7745967 0.6708204 0.6708204 0.7302967 0.7302967</code></pre>
 <div id="part-a-2" class="section level2">
 <h2>Part A</h2>
 <p>Let hot dogs = <span class="math inline">\(D\)</span> and hamburgers = <span class="math inline">\(B\)</span></p>
-<p>Given the association rule <span class="math inline">\(D \rightarrow B\)</span>, we find the confidence is <span class="math inline">\(c = P(B | D) = 2000/3000 \approx 67\%\)</span> We should consider that <span class="math inline">\(P(D) = 3000/5000 = 60\%\)</span> in the first place. Becasue of this fact, I would not say that the association rule is good but perhaps not strong.</p>
+<p>Given the association rule <span class="math inline">\(D \rightarrow B\)</span>, we find the confidence is <span class="math inline">\(c = P(B | D) = 2000/3000 \approx 67\%\)</span> We should consider that <span class="math inline">\(P(D) = 3000/5000 = 60\%\)</span> in the first place. Because of this fact, I would not say that the association rule is good but perhaps not strong.</p>
 </div>
 <div id="part-b-2" class="section level2">
 <h2>Part B</h2>
 <p>Let’s look at <span class="math inline">\(P(D | B) = 2000/2500 = 80%\)</span>. Also, <span class="math inline">\(P(B) = 2500/5000 = 50%\)</span>. Because the confidence in the association rule <span class="math inline">\(B \rightarrow D\)</span> is so much higher than the probability of <span class="math inline">\(B\)</span> I would say that the purchase between hot dogs and hamburgers is not independent. People who by hamburgers will probably buy hot dogs too.</p>
-<p>Becasue <span class="math inline">\(P(B \cap D) = 0.4 &gt; P(B) \times P(D) = 0.5 \times 0.6 = 0.3\)</span>, the are positively correlated.</p>
+<p>Because <span class="math inline">\(P(B \cap D) = 0.4 &gt; P(B) \times P(D) = 0.5 \times 0.6 = 0.3\)</span>, the are positively correlated.</p>
 </div>
 <div id="part-c-1" class="section level2">
 <h2>Part C</h2>
+<pre class="r"><code>im &lt;- interestMeasure(rules, measure = c(&quot;kulczynski&quot;, &quot;cosine&quot;, &quot;lift&quot;, &quot;phi&quot;), trans)</code></pre>
+<p>For the seven association rules, the following presents the Kulczynski, cosine, life, and correlation interest measures.</p>
+<p>The <code>R</code> function <code>interestMeasure</code> does not allow <code>allConfidence</code> or <code>maxConfidence</code> for rules, such as apriori.</p>
+<table>
+<thead>
+<tr class="header">
+<th align="left">Association Rule</th>
+<th align="left">Kulczynski</th>
+<th align="left">Cosine</th>
+<th align="left">Life</th>
+<th align="left">Correlation</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">1</td>
+<td align="left">0.75</td>
+<td align="left">0.7071068</td>
+<td align="left">1</td>
+<td align="left">NA</td>
+</tr>
+<tr class="even">
+<td align="left">2</td>
+<td align="left">0.75</td>
+<td align="left">0.7071068</td>
+<td align="left">1</td>
+<td align="left">NA</td>
+</tr>
+<tr class="odd">
+<td align="left">3</td>
+<td align="left">0.8</td>
+<td align="left">0.7745967</td>
+<td align="left">1</td>
+<td align="left">NA</td>
+</tr>
+<tr class="even">
+<td align="left">4</td>
+<td align="left">0.675</td>
+<td align="left">0.6708204</td>
+<td align="left">1.5</td>
+<td align="left">0.4082483</td>
+</tr>
+<tr class="odd">
+<td align="left">5</td>
+<td align="left">0.675</td>
+<td align="left">0.6708204</td>
+<td align="left">1.5</td>
+<td align="left">0.4082483</td>
+</tr>
+<tr class="even">
+<td align="left">6</td>
+<td align="left">0.7333333</td>
+<td align="left">0.7302967</td>
+<td align="left">1.3333333</td>
+<td align="left">0.4082483</td>
+</tr>
+<tr class="odd">
+<td align="left">7</td>
+<td align="left">0.7333333</td>
+<td align="left">0.7302967</td>
+<td align="left">1.3333333</td>
+<td align="left">0.4082483</td>
+</tr>
+</tbody>
+</table>
 </div>
 </div>
 

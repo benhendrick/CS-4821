@@ -45,15 +45,44 @@ For the association rule $I1 \rightarrow I6$:
 - Interest: $i = \frac{2/5}{(3/5)^2} = 1.11$
 
 
+
+
+
+
+
+
+
 # Question 2
+
+## Part A
+
+Refer to other submitted documents. The document `APRIORI.pdf` contains the apriori. The document `FP.pdf` contains the FP-growth tree.
+
+## Part B
+
+Given the rule, the *strong* association rules are 
+
+- $\{O,K\} \rightarrow \{E\} : s= 3/5, c=3/3$
+- $\{O,E\} \rightarrow \{K\} : s=3/5, c=3/3$
+- $\{K,E\} \rightarrow \{O\} : s =3/5, c=3/4$
+
+
+
+
+
+
+
+# Question 3
 
 Load the data.
 
-```{r}
+```{r, include=FALSE}
 library(arules)
+```
+
+```{r}
 items <- read.transactions("items.txt", format = "basket", sep=",", rm.duplicates =TRUE)
 ```
-## Part A
 
 Create the ariori.
 
@@ -62,15 +91,17 @@ items.rules <- apriori(items, parameter = list(supp = 0.6, conf = 0.8))
 inspect(items.rules)
 ```
 
-The frequent items sets according the appriory are $\{M, O, Y, E, K, EO, KO\}$
+The frequent items sets according the apriori are {M}, {O}, {K}, {E}, {Y}, {O,E}, {O,K}. This frequent item set is smaller than the one found by the manual apriori in 2.A.
 
 
 
-## Part B
 
-# Question 3
 
-Suppose the given contigency table
+
+
+# Question 4
+
+Suppose the given contingency table
 
 *Transactions* | Hot Dogs | Not Hot Dogs | $\sum_{row}$ 
 -|----- | ----- | ----
@@ -83,22 +114,38 @@ Set up the data in `R`.
 ```{r}
 trans <- read.transactions("trans.txt", format = "basket",sep=",")
 rules <- apriori(trans, parameter = list(supp = 0.25, conf = 0.5, target="rules"))
-interestMeasure(rules, "cosine", trans)
 ```
 
 ## Part A
 
 Let hot dogs = $D$ and hamburgers = $B$
 
-Given the association rule $D \rightarrow B$, we find the confidence is $c = P(B | D) = 2000/3000 \approx 67\%$ We should consider that $P(D) = 3000/5000 = 60\%$ in the first place. Becasue of this fact, I would not say that the association rule is good but perhaps not strong.
+Given the association rule $D \rightarrow B$, we find the confidence is $c = P(B | D) = 2000/3000 \approx 67\%$ We should consider that $P(D) = 3000/5000 = 60\%$ in the first place. Because of this fact, I would not say that the association rule is good but perhaps not strong.
 
 ## Part B
 
 Let's look at $P(D | B) = 2000/2500 = 80%$. Also, $P(B) = 2500/5000 = 50%$. Because the confidence in the association rule $B \rightarrow D$ is so much higher than the probability of $B$ I would say that the purchase between hot dogs and hamburgers is not independent. People who by hamburgers will probably buy hot dogs too. 
 
-Becasue $P(B \cap D)  = 0.4 > P(B) \times P(D) = 0.5 \times 0.6 = 0.3$, the are positively correlated.
+Because $P(B \cap D)  = 0.4 > P(B) \times P(D) = 0.5 \times 0.6 = 0.3$, the are positively correlated.
 
 ## Part C
 
+```{r}
+im <- interestMeasure(rules, measure = c("kulczynski", "cosine", "lift", "phi"), trans)
+```
+
+For the seven association rules, the following presents the Kulczynski, cosine, life, and correlation interest measures.
+
+The `R` function `interestMeasure` does not allow `allConfidence` or `maxConfidence` for rules, such as apriori.
+
+Association Rule | Kulczynski | Cosine | Life | Correlation
+--- | --- | --- | --- | ----
+1 | `r im[1,1]` | `r im[1,2]` | `r im[1,3]` | `r im[1,4]`
+2 | `r im[2,1]` | `r im[2,2]` | `r im[2,3]` | `r im[2,4]`
+3 | `r im[3,1]` | `r im[3,2]` | `r im[3,3]` | `r im[3,4]`
+4 | `r im[4,1]` | `r im[4,2]` | `r im[4,3]` | `r im[4,4]`
+5 | `r im[5,1]` | `r im[5,2]` | `r im[5,3]` | `r im[5,4]`
+6 | `r im[6,1]` | `r im[6,2]` | `r im[6,3]` | `r im[6,4]`
+7 | `r im[7,1]` | `r im[7,2]` | `r im[7,3]` | `r im[7,4]`
 
 
